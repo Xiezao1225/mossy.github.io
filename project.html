@@ -377,6 +377,59 @@ td b{font-weight:600}
 ::-webkit-scrollbar-thumb{background:#D6CEBD;border-radius:9px}
 ::-webkit-scrollbar-thumb:hover{background:#C2B9A5}
 ::-webkit-scrollbar-track{background:transparent}
+
+/* ---- 划词高亮标记 ---- */
+.hl{cursor:pointer;padding:0 1px;border-radius:2px}
+.hl-a{background:var(--gold-wash);box-shadow:0 0 0 1px rgba(181,137,0,.3)}
+.hl-b{background:var(--accent-wash);box-shadow:0 0 0 1px rgba(192,73,43,.32)}
+.hl-pop{position:fixed;z-index:60;display:none;gap:6px;background:var(--ink);padding:6px 8px;border-radius:3px;box-shadow:0 8px 22px rgba(0,0,0,.28)}
+.hl-pop.show{display:flex}
+.hl-pop button{appearance:none;border:1px solid rgba(255,255,255,.28);background:transparent;color:#fff;font-size:12px;padding:5px 10px;border-radius:2px;cursor:pointer;font-family:var(--sans);line-height:1}
+.hl-pop button:hover{background:rgba(255,255,255,.16)}
+.flag-btn.on{background:var(--gold);border-color:var(--gold);color:#fff}
+.wrong-btn.on{background:var(--olive);border-color:var(--olive);color:#fff}
+.flag-dot{color:var(--gold);margin-right:5px;font-size:12px}
+
+/* ---- 统计卡片 / 图表 ---- */
+.stat-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.tile{border:1px solid var(--rule);border-radius:3px;padding:14px 16px;background:#fff}
+.tile .t-num{font-family:var(--serif);font-size:26px;font-weight:600;color:var(--ink);line-height:1.15}
+.tile .t-num small{font-size:14px;color:var(--ink-3);font-weight:400}
+.tile .t-lab{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin-top:5px}
+.chart{display:flex;gap:14px;align-items:flex-end;overflow-x:auto;padding:8px 2px 0;min-height:210px}
+.bar-col{flex:1 1 64px;min-width:58px;max-width:110px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.bar-val{font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.bar-track{width:100%;height:150px;background:var(--rule-2);border-radius:2px;display:flex;align-items:flex-end;overflow:hidden}
+.bar-fill{width:100%;border-radius:2px 2px 0 0;transition:height .45s ease;min-height:4px}
+.bar-fill.hi{background:var(--accent)}
+.bar-fill.mid{background:var(--gold)}
+.bar-fill.lo{background:var(--olive)}
+.bar-label{font-size:12px;color:var(--ink-2);text-align:center;line-height:1.35}
+.bar-sub{font-size:10.5px;color:var(--ink-3)}
+.hbars{display:flex;flex-direction:column;gap:10px}
+.hbar-row{display:grid;grid-template-columns:minmax(96px,190px) 1fr 56px;gap:10px;align-items:center}
+.hbar-name{font-size:13px;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hbar-track{height:16px;background:var(--rule-2);border-radius:2px;overflow:hidden}
+.hbar-fill{height:100%;border-radius:2px;min-width:3px}
+.hbar-fill.lo{background:var(--olive)}
+.hbar-fill.mid{background:var(--gold)}
+.hbar-fill.hi{background:var(--accent)}
+.hbar-val{font-size:12.5px;font-weight:600;color:var(--ink-2);text-align:right}
+.hbar-sub{font-size:11px;color:var(--ink-3)}
+@media(max-width:560px){.hbar-row{grid-template-columns:minmax(72px,110px) 1fr 50px}}
+.empty-mini{padding:20px 6px;color:var(--ink-3);font-size:13px;text-align:center}
+.sub-head{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin:22px 0 10px;display:flex;align-items:center;gap:10px}
+.sub-head::after{content:"";flex:1;height:1px;background:var(--rule)}
+
+/* ---- 背记册默写 ---- */
+.mem-sentence{font-family:var(--serif);font-size:19px;line-height:2.2;color:var(--ink);background:#fff;border:1px solid var(--rule);border-radius:3px;padding:20px 22px;margin-top:16px;text-align:left}
+.mem-input{display:inline-block;min-width:88px;max-width:210px;padding:2px 8px;margin:0 4px;border:none;border-bottom:1.5px solid var(--accent);background:transparent;font-family:var(--sans);font-size:16px;text-align:center;outline:none;transition:background .16s}
+.mem-input:focus{background:var(--accent-wash)}
+.mem-input.correct{border-bottom-color:var(--olive);background:var(--olive-wash);color:#3B4728}
+.mem-input.wrong{border-bottom-color:var(--accent);background:var(--accent-wash);color:var(--accent-2)}
+.mb-sentence{font-family:var(--serif);font-size:14.5px;color:var(--ink);line-height:1.7}
+.mb-sentence .blank{color:var(--accent);font-weight:600;letter-spacing:.05em}
+.mb-note{font-size:12px;color:var(--ink-3);margin-top:3px;line-height:1.6}
 </style>
 </head>
 <body>
@@ -397,6 +450,8 @@ td b{font-weight:600}
     <button class="tab" data-tab="dictation">单词默写</button>
     <button class="tab" data-tab="bank">题库练习</button>
     <button class="tab" data-tab="ai">AI 出题</button>
+    <button class="tab" data-tab="wrongbook">错题 · 背记</button>
+    <button class="tab" data-tab="stats">统计</button>
     <button class="tab" data-tab="settings">设置</button>
   </nav>
 
@@ -624,6 +679,11 @@ td b{font-weight:600}
             <option value="4">★★★★ 4 星</option>
             <option value="5">★★★★★ 5 星</option>
           </select>
+          <select id="bank-filter-flag">
+            <option value="all">全部题目</option>
+            <option value="flagged">仅🚩标记题</option>
+            <option value="unflagged">不含标记题</option>
+          </select>
           <input type="search" id="bank-search" placeholder="搜索关键词">
           <button class="btn primary" id="bank-start">开始练习</button>
           <button class="btn" id="bank-shuffle">随机排序</button>
@@ -671,6 +731,9 @@ td b{font-weight:600}
           <button class="btn primary" id="bank-next-q">下一题 →</button>
           <button class="btn" id="bank-reveal">显示答案</button>
           <button class="btn" id="bank-ai-explain">🤖 AI 解析</button>
+          <button class="btn flag-btn" id="bank-flag">🚩 标记本题</button>
+          <button class="btn wrong-btn" id="bank-wrong-btn">📕 加入错题本</button>
+          <button class="btn" id="bank-mem-btn">📖 加入背记册</button>
           <button class="btn danger" id="bank-exit">退出练习</button>
         </div>
       </div>
@@ -789,6 +852,88 @@ td b{font-weight:600}
       </div>
     </section>
 
+    <!-- ==================== 错题 · 背记 ==================== -->
+    <section class="panel" id="panel-wrongbook">
+      <div class="card">
+        <div class="row between" style="margin-bottom:14px">
+          <h2 class="no-num" style="margin:0">📕 错题本 <span class="badge" id="wb-count">0</span></h2>
+          <div class="row">
+            <button class="btn primary sm" id="wb-redo">重做错题</button>
+            <button class="btn sm danger" id="wb-clear">清空错题本</button>
+          </div>
+        </div>
+        <p class="hint" style="margin:0 0 12px">做题答错会自动收集（可在设置关闭），也可在练习时点「📕 加入错题本」手动加入；「重做错题」按原题型重新作答。</p>
+        <div id="wb-list"></div>
+      </div>
+
+      <div class="card">
+        <div class="row between" style="margin-bottom:14px">
+          <h2 class="no-num" style="margin:0">📖 背记册 <span class="badge gold" id="mb-count">0</span></h2>
+          <div class="row">
+            <button class="btn primary sm" id="mb-dict">开始默写</button>
+            <button class="btn sm danger" id="mb-clear">清空背记册</button>
+          </div>
+        </div>
+        <p class="hint" style="margin:0 0 12px">练习时点「📖 加入背记册」收藏好句子；默写为<b>挖空默写</b>：句子中挖掉关键词，输入该词。</p>
+        <div id="mb-list"></div>
+      </div>
+
+      <div class="card" id="mem-practice" style="display:none">
+        <div class="scorebar">
+          <span>第 <b id="mem-pos">0</b> / <b id="mem-total">0</b> 句</span>
+          <span>正确 <b id="mem-right">0</b></span>
+        </div>
+        <div class="mem-sentence" id="mem-sentence">—</div>
+        <div class="muted small" id="mem-src" style="margin-top:8px"></div>
+        <div class="feedback" id="mem-feedback"></div>
+        <div class="row center-row">
+          <button class="btn" id="mem-hint">提示首字母</button>
+          <button class="btn" id="mem-speak">听句子</button>
+          <button class="btn primary" id="mem-submit">提交答案</button>
+          <button class="btn" id="mem-next">下一句 →</button>
+          <button class="btn danger" id="mem-exit">退出默写</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 统计 ==================== -->
+    <section class="panel" id="panel-stats">
+      <div class="card">
+        <div class="row between" style="margin-bottom:14px">
+          <h2 class="no-num" style="margin:0">学习总览</h2>
+          <button class="btn sm danger" id="stat-clear">清空统计数据</button>
+        </div>
+        <div class="stat-tiles" id="stat-tiles"></div>
+      </div>
+
+      <div class="card">
+        <h2><span class="num">01</span>各题型出错率 <span class="muted small" style="font-weight:400;letter-spacing:0">错误小题 ÷ 作答小题</span></h2>
+        <div id="chart-type"></div>
+      </div>
+
+      <div class="card">
+        <h2><span class="num">02</span>语法考点出错对比 <span class="muted small" style="font-weight:400;letter-spacing:0">按 point 字段统计</span></h2>
+        <div id="chart-point"></div>
+        <div class="sub-head">反复不会的考点（错 ≥ 2 次）</div>
+        <div id="point-hard"></div>
+      </div>
+
+      <div class="card">
+        <h2><span class="num">03</span>单词默写正确率对比 <span class="muted small" style="font-weight:400;letter-spacing:0">按词库</span></h2>
+        <div id="chart-dict"></div>
+      </div>
+
+      <div class="card">
+        <h2><span class="num">04</span>背记册默写</h2>
+        <div id="chart-mem"></div>
+      </div>
+
+      <div class="card">
+        <h2><span class="num">05</span>单词听力 · 听音选义</h2>
+        <div id="chart-listen"></div>
+      </div>
+    </section>
+
     <!-- ==================== 设置 ==================== -->
     <section class="panel" id="panel-settings">
       <div class="card">
@@ -833,14 +978,36 @@ td b{font-weight:600}
       </div>
 
       <div class="card">
-        <h2><span class="num">03</span>数据管理</h2>
+        <h2><span class="num">03</span>练习与错题</h2>
+        <div class="form-grid">
+          <div>
+            <label>错题本 · 重做答对后的处理</label>
+            <select id="set-grad">
+              <option value="never">不自动移除，手动删除（默认）</option>
+              <option value="once">答对 1 次后自动移除</option>
+              <option value="twice">连续答对 2 次后自动移除</option>
+            </select>
+          </div>
+          <div>
+            <label>答错自动收集</label>
+            <label class="switch-inline" style="margin-top:0">
+              <input type="checkbox" id="set-autowrong">
+              <span>做题答错时自动加入错题本</span>
+            </label>
+          </div>
+        </div>
+        <p class="hint">错题在「错题 · 背记」页重做；背记册句子以挖空默写复习。改动随「保存配置」一起保存。</p>
+      </div>
+
+      <div class="card">
+        <h2><span class="num">04</span>数据管理</h2>
         <div class="row">
           <button class="btn" id="data-export">导出全部数据</button>
           <button class="btn" id="data-import">导入数据</button>
           <input type="file" id="data-file" accept=".json" hidden>
           <button class="btn danger" id="data-reset">重置所有数据</button>
         </div>
-        <p class="hint">导出内容包含所有词库（含年级/Unit/重点标记）、题库与设置（含 API 配置，请注意保管）。</p>
+        <p class="hint">导出内容包含所有词库（含年级/Unit/重点标记）、题库、错题本、背记册、统计数据、划词标记与设置（含 API 配置，请注意保管）。</p>
       </div>
     </section>
   </main>
@@ -848,6 +1015,12 @@ td b{font-weight:600}
   <p class="footer">
     数据保存在浏览器本地 · 语音由 Web Speech API 合成 · AI 由你配置的接口驱动
   </p>
+</div>
+
+<div id="hl-pop" class="hl-pop">
+  <button data-c="a">🟨 金色</button>
+  <button data-c="b">🟥 红色</button>
+  <button data-c="">✕ 移除</button>
 </div>
 
 <div id="toast"></div>
@@ -1160,7 +1333,7 @@ level 取 A/B/C/D，难度依次递增，词汇与句式相应变难。`,
 
 let settings = null;
 function defaultSettings() {
-  return { endpoint: '', key: '', model: '', temperature: 0.7, prompts: { ...DEFAULT_PROMPTS } };
+  return { endpoint: '', key: '', model: '', temperature: 0.7, wrongGraduation: 'never', autoWrong: true, prompts: { ...DEFAULT_PROMPTS } };
 }
 function loadSettings() {
   try {
@@ -1170,6 +1343,8 @@ function loadSettings() {
       return {
         endpoint: s.endpoint || '', key: s.key || '', model: s.model || '',
         temperature: typeof s.temperature === 'number' ? s.temperature : 0.7,
+        wrongGraduation: ['never','once','twice'].includes(s.wrongGraduation) ? s.wrongGraduation : 'never',
+        autoWrong: s.autoWrong !== false,
         prompts: { ...DEFAULT_PROMPTS, ...(s.prompts || {}) }
       };
     }
@@ -1692,6 +1867,10 @@ const LEGACY_V3_KEY = 'eng_libraries_v3';
 const LEGACY_V2_KEY = 'eng_libraries_v2';
 const LEGACY_WORDS_KEY = 'eng_learn_words_v1';
 const BANK_KEY = 'eng_question_bank_v2';
+const WRONG_KEY = 'eng_wrong_book_v1';
+const MEM_KEY = 'eng_mem_book_v1';
+const STATS_KEY = 'eng_stats_v1';
+const MARKS_KEY = 'eng_marks_v1';
 
 const DEMO_MULTI = [
   { name: '七年级 Unit 1', grade: '七年级', unit: 'Unit 1', isKey: false, words: [
@@ -2270,6 +2449,8 @@ $('tabs').addEventListener('click', e => {
   const tab = btn.dataset.tab;
   if (tab === 'listen' && !listen.current) lNext();
   if (tab === 'dictation' && !dict.current) dNext();
+  if (tab === 'stats') renderStats();
+  if (tab === 'wrongbook') { renderWrongBook(); renderMemBook(); }
 });
 
 /* =========================================================
@@ -2323,6 +2504,7 @@ $('l-options').addEventListener('click', e => {
   listen.answered = true;
   const q = listen.current;
   const correct = btn.dataset.val === q.word.meaning;
+  statListen(correct);
   [...$('l-options').children].forEach(b => {
     b.disabled = true;
     if (b.dataset.val === q.word.meaning) b.classList.add('correct');
@@ -2432,7 +2614,7 @@ $('v-playall').addEventListener('click', () => {
 /* =========================================================
    单词默写（词级）
    ========================================================= */
-const dict = { current: null, answered: false, index: 0, right: 0, total: 0 };
+const dict = { current: null, src: null, answered: false, index: 0, right: 0, total: 0 };
 
 function dNext() {
   const pool = getPool('d');
@@ -2447,7 +2629,8 @@ function dNext() {
     dict.current = null; return;
   }
   try { speechSynthesis.cancel(); } catch (e) {}
-  dict.current = pool[rand(pool.length)].word;
+  dict.src = pool[rand(pool.length)];
+  dict.current = dict.src.word;
   dict.answered = false;
   dict.index++;
   $('d-index').textContent = dict.index;
@@ -2470,6 +2653,7 @@ function dSubmit() {
   $('d-total').textContent = dict.total;
   const answer = dict.current.word;
   const isRight = val === answer.toLowerCase();
+  statDict(dict.src && dict.src.lib ? dict.src.lib.name : '未命名词库', isRight);
   if (isRight) {
     dict.right++;
     $('d-right').textContent = dict.right;
@@ -2621,6 +2805,54 @@ function resolveAnswer(ans, opts) {
   return '';
 }
 
+/* ---- 正确答案位置均衡：避免 AAA/BBB 连排 ---- */
+function collectOptionGroups(q, out) {
+  out = out || [];
+  if (!q) return out;
+  const push = (obj, key) => out.push({
+    opts: obj[key],
+    ans: obj.answer,
+    set: arr => { obj[key] = arr; }
+  });
+  if (q.type === 'choice') push(q, 'options');
+  else if (q.type === 'reading') (q.questions || []).forEach(sq => push(sq, 'options'));
+  else if (q.type === 'cloze') (q.blanks || []).forEach(b => { if ((b.options || []).length >= 2) push(b, 'options'); });
+  else if (q.type === 'listening') {
+    const list = q.subType === 'short_dialogue' ? (q.items || []) : (q.subType === 'long_dialogue' ? (q.questions || []) : []);
+    list.forEach(it => push(it, 'options'));
+  }
+  return out;
+}
+
+function spreadAnswerLetters(questions) {
+  const groups = [];
+  (questions || []).forEach(q => collectOptionGroups(q, groups));
+  if (!groups.length) return 0;
+  const seq = [];
+  const rounds = Math.ceil(groups.length / 4) + 1;
+  for (let r = 0; r < rounds; r++) seq.push(...shuffle([0, 1, 2, 3]));
+  let prev = -1;
+  groups.forEach((g, i) => {
+    const opts = g.opts || [];
+    const n = opts.length;
+    if (n < 2) return;
+    const ansIdx = opts.indexOf(g.ans);
+    if (ansIdx < 0) return;
+    let t = seq[i] % n;
+    let guard = 0;
+    while (t === prev && guard++ < n) t = (t + 1) % n;
+    prev = t;
+    const pool = opts.slice();
+    pool.splice(ansIdx, 1);
+    shuffle(pool);
+    const arr = [];
+    let pi = 0;
+    for (let k = 0; k < n; k++) arr.push(k === t ? g.ans : (pi < pool.length ? pool[pi++] : opts[k % n]));
+    g.set(arr);
+  });
+  return groups.length;
+}
+
 /* ---- 词性提示（综合填空自由填词用） ---- */
 const POS_LABELS = ['名词','动词','形容词','副词','数词','冠词','代词','介词','连词','感叹词'];
 const POS_NO_HINT = new Set(['代词','介词','连词']);   // 代词/介词/连词不做提示
@@ -2660,6 +2892,7 @@ function normalizeQuestion(raw) {
     if (opts.length < 2 || !ans) return null;
     return {
       id: uid(), type:'choice', difficulty: diff,
+      point: String(raw.point || raw.knowledgePoint || '').trim(),
       question: String(raw.question || '').trim() || '请选择正确答案',
       options: opts, answer: ans,
       explanation: String(raw.explanation || '').trim(),
@@ -2678,12 +2911,14 @@ function normalizeQuestion(raw) {
       return {
         question: String(sq.question || '').trim(),
         options: opts, answer: ans,
+        point: String(sq.point || '').trim(),
         explanation: String(sq.explanation || '').trim()
       };
     }).filter(Boolean);
     if (!normQs.length || !raw.passage) return null;
     return {
       id: uid(), type:'reading', difficulty: diff,
+      point: String(raw.point || '').trim(),
       level: String(raw.level || 'A').toUpperCase().slice(0,1),
       title: String(raw.title || '阅读理解').trim(),
       passage: String(raw.passage || '').trim(),
@@ -2702,12 +2937,14 @@ function normalizeQuestion(raw) {
         options: opts,
         answer: ans,
         pos: normalizePos(b.pos || b.posHint || b.partOfSpeech || b.wordClass),
+        point: String(b.point || '').trim(),
         explanation: String(b.explanation || '').trim()
       };
     }).filter(Boolean);
     if (!normBlanks.length || !raw.passage) return null;
     return {
       id: uid(), type:'cloze', difficulty: diff,
+      point: String(raw.point || '').trim(),
       passage: String(raw.passage || '').trim(),
       blanks: normBlanks
     };
@@ -2718,10 +2955,10 @@ function normalizeQuestion(raw) {
       const text = String(s.text || '').trim();
       const ans = String(s.answer || '').trim();
       if (!text || !ans) return null;
-      return { text, answer: ans, hint: String(s.hint || '').trim(), explanation: String(s.explanation || '').trim() };
+      return { text, answer: ans, hint: String(s.hint || '').trim(), point: String(s.point || '').trim(), explanation: String(s.explanation || '').trim() };
     }).filter(Boolean);
     if (!normS.length) return null;
-    return { id: uid(), type:'verb', difficulty: diff, sentences: normS };
+    return { id: uid(), type:'verb', difficulty: diff, point: String(raw.point || '').trim(), sentences: normS };
   }
   if (t === 'listening') {
     const sub = String(raw.subType || raw.subtype || 'short_dialogue').toLowerCase();
@@ -2738,12 +2975,14 @@ function normalizeQuestion(raw) {
           script: String(it.script || '').trim(),
           question: String(it.question || '').trim(),
           options: opts, answer: ans,
+          point: String(it.point || '').trim(),
           explanation: String(it.explanation || '').trim()
         };
       }).filter(Boolean);
       if (!normItems.length) return null;
       return {
         id: uid(), type:'listening', subType:'short_dialogue', difficulty: diff,
+        point: String(raw.point || '').trim(),
         instructions: instructions || '听录音两遍，从ABC三个选项中选出能回答所给句子的正确答案。',
         prepTime, items: normItems
       };
@@ -2758,12 +2997,14 @@ function normalizeQuestion(raw) {
         return {
           question: String(sq.question || '').trim(),
           options: opts, answer: ans,
+          point: String(sq.point || '').trim(),
           explanation: String(sq.explanation || '').trim()
         };
       }).filter(Boolean);
       if (!script || !normQs.length) return null;
       return {
         id: uid(), type:'listening', subType:'long_dialogue', difficulty: diff,
+        point: String(raw.point || '').trim(),
         instructions: instructions || '听录音两遍，从ABC三个选项中选出正确答案。',
         prepTime, script, questions: normQs
       };
@@ -2781,6 +3022,7 @@ function normalizeQuestion(raw) {
       if (!cols.length || !rows.length || !blanks.length) return null;
       return {
         id: uid(), type:'listening', subType:'table', difficulty: diff,
+        point: String(raw.point || '').trim(),
         instructions: instructions || '听录音两遍，完成下面的表格。',
         prepTime, script,
         title: String(raw.title || '听力填表').trim(),
@@ -2811,10 +3053,13 @@ function importQuestions(text) {
     else { toast('JSON 格式不支持', 'err'); return { added: 0, skipped: 0 }; }
   }
   let added = 0, skipped = 0;
+  const normalized = [];
   data.forEach(item => {
     const q = normalizeQuestion(item);
-    if (q) { bank.push(q); added++; } else skipped++;
+    if (q) { normalized.push(q); added++; } else skipped++;
   });
+  spreadAnswerLetters(normalized);
+  normalized.forEach(q => bank.push(q));
   saveBank(); renderBankList();
   toast(`导入完成：新增 ${added} 题${skipped ? `，跳过 ${skipped} 题` : ''}`, added ? 'ok' : 'err');
   return { added, skipped };
@@ -2838,25 +3083,732 @@ $('bank-clear-btn').addEventListener('click', () => {
 });
 
 /* =========================================================
+   统计 / 错题本 / 背记册 存储与记录
+   ========================================================= */
+function loadJSON(key, fallback) {
+  try { const raw = localStorage.getItem(key); if (raw) { const v = JSON.parse(raw); if (v != null) return v; } } catch (e) {}
+  return fallback;
+}
+function saveJSON(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {} }
+
+let wrongBook = [];
+let memBook = [];
+let stats = { types: {}, points: {}, dict: {}, listen: { right: 0, total: 0 }, mem: { right: 0, total: 0 } };
+
+function normalizeStats(s) {
+  s = (s && typeof s === 'object') ? s : {};
+  const cnt = v => (v && typeof v === 'object') ? { right: +v.right || 0, total: +v.total || 0 } : { right: 0, total: 0 };
+  return {
+    types: (s.types && typeof s.types === 'object') ? s.types : {},
+    points: (s.points && typeof s.points === 'object') ? s.points : {},
+    dict: (s.dict && typeof s.dict === 'object') ? s.dict : {},
+    listen: cnt(s.listen),
+    mem: cnt(s.mem)
+  };
+}
+function loadWrongBook() { const v = loadJSON(WRONG_KEY, []); wrongBook = Array.isArray(v) ? v : []; }
+function saveWrongBook() { saveJSON(WRONG_KEY, wrongBook); }
+function loadMemBook() { const v = loadJSON(MEM_KEY, []); memBook = Array.isArray(v) ? v : []; }
+function saveMemBook() { saveJSON(MEM_KEY, memBook); }
+function loadStats() { stats = normalizeStats(loadJSON(STATS_KEY, null)); }
+function saveStats() { saveJSON(STATS_KEY, stats); }
+
+/* 记录一次小题作答；答错时自动进错题本 */
+function recordItem(q, correct, point) {
+  if (!q) return;
+  const type = q.type || 'other';
+  const T = stats.types[type] || (stats.types[type] = { wrong: 0, total: 0 });
+  T.total++;
+  if (!correct) T.wrong++;
+  const p = String(point == null ? '' : point).trim() || String(q.point || '').trim();
+  if (p) {
+    const P = stats.points[p] || (stats.points[p] = { wrong: 0, total: 0 });
+    P.total++;
+    if (!correct) P.wrong++;
+  }
+  if (!correct) {
+    if (practice.state) practice.state.sawWrong = true;
+    if (settings && settings.autoWrong !== false) touchWrong(q);
+  }
+  saveStats();
+}
+function statDict(libName, right) {
+  const d = stats.dict[libName] || (stats.dict[libName] = { right: 0, total: 0 });
+  d.total++;
+  if (right) d.right++;
+  saveStats();
+}
+function statMem(right) {
+  stats.mem = stats.mem || { right: 0, total: 0 };
+  stats.mem.total++;
+  if (right) stats.mem.right++;
+  saveStats();
+}
+function statListen(right) {
+  stats.listen = stats.listen || { right: 0, total: 0 };
+  stats.listen.total++;
+  if (right) stats.listen.right++;
+  saveStats();
+}
+
+/* ---- 统计渲染 ---- */
+function errRate(wrong, total) { return total ? Math.round(wrong / total * 100) : 0; }
+function accRate(right, total) { return total ? Math.round(right / total * 100) : 0; }
+function errClass(r) { return r >= 50 ? 'hi' : r >= 25 ? 'mid' : 'lo'; }
+function accClass(r) { return r >= 80 ? 'lo' : r >= 60 ? 'mid' : 'hi'; }
+
+function renderStats() {
+  const tiles = $('stat-tiles');
+  const types = stats.types || {};
+  let tTotal = 0, tWrong = 0;
+  Object.values(types).forEach(t => { tTotal += (+t.total) || 0; tWrong += (+t.wrong) || 0; });
+  let dTotal = 0, dRight = 0;
+  Object.values(stats.dict || {}).forEach(d => { dTotal += (+d.total) || 0; dRight += (+d.right) || 0; });
+  const mem = stats.mem || { right: 0, total: 0 };
+  const listen = stats.listen || { right: 0, total: 0 };
+  const tile = (num, unit, lab) => `<div class="tile"><div class="t-num">${num}${unit ? `<small> ${unit}</small>` : ''}</div><div class="t-lab">${lab}</div></div>`;
+  if (tiles) tiles.innerHTML = [
+    tile(tTotal, '小题', '累计作答'),
+    tile(tTotal ? accRate(tTotal - tWrong, tTotal) : 0, tTotal ? '%' : '', tTotal ? `正确率（${tTotal - tWrong}/${tTotal}）` : '正确率'),
+    tile(wrongBook.length, '题', '错题本'),
+    tile(memBook.length, '句', '背记册'),
+    tile(dTotal ? accRate(dRight, dTotal) : 0, dTotal ? '%' : '', '单词默写正确率'),
+    tile(listen.total ? accRate(listen.right, listen.total) : 0, listen.total ? '%' : '', '单词听力正确率'),
+    tile(mem.total ? accRate(mem.right, mem.total) : 0, mem.total ? '%' : '', '背记默写正确率')
+  ].join('');
+
+  /* 01 题型出错率 */
+  const typeBox = $('chart-type');
+  if (typeBox) {
+    const rows = Object.keys(types).filter(k => types[k] && types[k].total);
+    if (!rows.length) typeBox.innerHTML = '<div class="empty-mini">暂无数据 —— 去题库做几道题吧</div>';
+    else typeBox.innerHTML = `<div class="chart">${rows.map(k => {
+      const t = types[k];
+      const r = errRate(t.wrong, t.total);
+      return `<div class="bar-col">
+        <div class="bar-val">${r}%</div>
+        <div class="bar-track"><div class="bar-fill ${errClass(r)}" style="height:${Math.max(r, 3)}%"></div></div>
+        <div class="bar-label">${esc(typeLabel(k))}<div class="bar-sub">错 ${t.wrong} / ${t.total}</div></div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  /* 02 考点出错对比 + 难点 */
+  const pointBox = $('chart-point');
+  const hardBox = $('point-hard');
+  const points = Object.keys(stats.points || {}).filter(k => stats.points[k] && stats.points[k].total);
+  points.sort((a, b) => errRate(stats.points[b].wrong, stats.points[b].total) - errRate(stats.points[a].wrong, stats.points[a].total) || stats.points[b].wrong - stats.points[a].wrong);
+  if (pointBox) {
+    if (!points.length) pointBox.innerHTML = '<div class="empty-mini">题目暂未提供 point（考点）字段 —— AI 出题时会自动要求填写</div>';
+    else pointBox.innerHTML = `<div class="hbars">${points.slice(0, 12).map(k => {
+      const p = stats.points[k];
+      const r = errRate(p.wrong, p.total);
+      return `<div class="hbar-row">
+        <div class="hbar-name" title="${esc(k)}">${esc(k)}</div>
+        <div class="hbar-track"><div class="hbar-fill ${errClass(r)}" style="width:${Math.max(r, 2)}%"></div></div>
+        <div class="hbar-val">${r}%</div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+  if (hardBox) {
+    const hard = points.filter(k => stats.points[k].wrong >= 2);
+    if (!hard.length) hardBox.innerHTML = '<div class="empty-mini">暂无反复出错的考点</div>';
+    else hardBox.innerHTML = `<div class="hbars">${hard.map(k => {
+      const p = stats.points[k];
+      return `<div class="hbar-row">
+        <div class="hbar-name" title="${esc(k)}">${esc(k)}</div>
+        <div class="hbar-track"><div class="hbar-fill hi" style="width:${Math.max(errRate(p.wrong, p.total), 4)}%"></div></div>
+        <div class="hbar-val">错 ${p.wrong} 次</div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  /* 03 默写正确率（按词库） */
+  const dictBox = $('chart-dict');
+  if (dictBox) {
+    const libs = Object.keys(stats.dict || {}).filter(k => stats.dict[k] && stats.dict[k].total);
+    libs.sort((a, b) => accRate(stats.dict[a].right, stats.dict[a].total) - accRate(stats.dict[b].right, stats.dict[b].total));
+    if (!libs.length) dictBox.innerHTML = '<div class="empty-mini">还没有默写记录 —— 去「单词默写」练几组</div>';
+    else dictBox.innerHTML = `<div class="hbars">${libs.map(k => {
+      const d = stats.dict[k];
+      const r = accRate(d.right, d.total);
+      return `<div class="hbar-row">
+        <div class="hbar-name" title="${esc(k)}">${esc(k)}</div>
+        <div class="hbar-track"><div class="hbar-fill ${accClass(r)}" style="width:${Math.max(r, 2)}%"></div></div>
+        <div class="hbar-val">${r}%</div>
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  /* 04 背记册默写 */
+  const memBox = $('chart-mem');
+  if (memBox) {
+    if (!mem.total) memBox.innerHTML = '<div class="empty-mini">还没有默写记录 —— 收藏句子后去「错题 · 背记」页默写</div>';
+    else {
+      const r = accRate(mem.right, mem.total);
+      memBox.innerHTML = `<div class="stat-tiles">
+        ${tile(mem.right, '句', '默写正确')}
+        ${tile(mem.total - mem.right, '句', '默写错误')}
+        ${tile(r, '%', '正确率')}
+      </div>`;
+    }
+  }
+
+  /* 05 单词听力 */
+  const lBox = $('chart-listen');
+  if (lBox) {
+    if (!listen.total) lBox.innerHTML = '<div class="empty-mini">还没有听力记录 —— 去「单词听力」练几题</div>';
+    else {
+      const r = accRate(listen.right, listen.total);
+      lBox.innerHTML = `<div class="stat-tiles">
+        ${tile(listen.right, '题', '听音选义正确')}
+        ${tile(listen.total - listen.right, '题', '听音选义错误')}
+        ${tile(r, '%', '正确率')}
+      </div>`;
+    }
+  }
+}
+$('stat-clear').addEventListener('click', () => {
+  if (!confirm('确定清空全部统计数据（题型/考点/默写正确率）？错题本与背记册不受影响。')) return;
+  stats = normalizeStats(null);
+  saveStats();
+  renderStats();
+  toast('统计数据已清空');
+});
+
+/* ---- 划词高亮标记 ---- */
+let marks = {};   // zoneKey -> [{s, e, c:'a'|'b'}]
+function loadMarks() { const v = loadJSON(MARKS_KEY, {}); marks = (v && typeof v === 'object') ? v : {}; }
+function saveMarks() { saveJSON(MARKS_KEY, marks); }
+
+function zoneTextNodes(zone) {
+  const w = document.createTreeWalker(zone, NodeFilter.SHOW_TEXT);
+  const out = []; let off = 0;
+  while (w.nextNode()) { const n = w.currentNode; out.push({ node: n, s: off, e: off + n.nodeValue.length }); off += n.nodeValue.length; }
+  return out;
+}
+function offsetInZone(zone, node, offset) {
+  const r = document.createRange();
+  r.selectNodeContents(zone);
+  try { r.setEnd(node, offset); } catch (e) { return -1; }
+  return r.toString().length;
+}
+function clearZoneMarks(zone) {
+  zone.querySelectorAll('span.hl').forEach(sp => {
+    const p = sp.parentNode;
+    while (sp.firstChild) p.insertBefore(sp.firstChild, sp);
+    p.removeChild(sp);
+  });
+}
+function applyMarksToZone(zone) {
+  const key = zone.dataset.hlZone;
+  if (!key) return;
+  const zt = zone.textContent;
+  const list = (marks[key] || []).map(m => {
+    if (m.t && zt.slice(m.s, m.e) === m.t) return m;
+    if (m.t) { const i = zt.indexOf(m.t); if (i >= 0) return { s: i, e: i + m.t.length, c: m.c }; }
+    return null;
+  }).filter(Boolean);
+  clearZoneMarks(zone);
+  list.forEach(m => {
+    zoneTextNodes(zone).forEach(({ node, s, e }) => {
+      if (e <= m.s || s >= m.e) return;
+      const from = Math.max(m.s, s) - s, to = Math.min(m.e, e) - s;
+      let t = node;
+      if (to < t.nodeValue.length) t.splitText(to);
+      if (from > 0) t = t.splitText(from);
+      if (!t.nodeValue) return;
+      const span = document.createElement('span');
+      span.className = 'hl hl-' + (m.c === 'b' ? 'b' : 'a');
+      t.parentNode.insertBefore(span, t);
+      span.appendChild(t);
+    });
+  });
+}
+function applyAllMarks(root) {
+  (root || document).querySelectorAll('[data-hl-zone]').forEach(applyMarksToZone);
+}
+
+const hlPop = $('hl-pop');
+let hlSel = null;
+function hideHlPop() { hlPop.classList.remove('show'); hlSel = null; }
+function showHlPop(x, y, zone, s, e) {
+  hlSel = { zone, s, e };
+  hlPop.classList.add('show');
+  const w = hlPop.offsetWidth || 190, h = hlPop.offsetHeight || 34;
+  hlPop.style.left = Math.min(Math.max(8, x), Math.max(8, window.innerWidth - w - 8)) + 'px';
+  hlPop.style.top = (y + h + 8 > window.innerHeight ? y - h - 8 : y + 8) + 'px';
+}
+
+document.addEventListener('mouseup', e => {
+  if (hlPop.contains(e.target)) return;
+  const sel = window.getSelection();
+  if (!sel || !sel.rangeCount || sel.isCollapsed) { hideHlPop(); return; }
+  const range = sel.getRangeAt(0);
+  const zoneOf = n => {
+    const el = n && n.nodeType === 3 ? n.parentElement : n;
+    return el && el.closest ? el.closest('[data-hl-zone]') : null;
+  };
+  const z1 = zoneOf(range.startContainer), z2 = zoneOf(range.endContainer);
+  if (!z1 || z1 !== z2) { hideHlPop(); return; }
+  const se = range.startContainer, ee = range.endContainer;
+  const inField = n => { const el = n && n.nodeType === 3 ? n.parentElement : n; return el && el.closest && el.closest('input, textarea, button'); };
+  if (inField(se) || inField(ee)) { hideHlPop(); return; }
+  const s = offsetInZone(z1, range.startContainer, range.startOffset);
+  const en = offsetInZone(z1, range.endContainer, range.endOffset);
+  if (s < 0 || en <= s) { hideHlPop(); return; }
+  const rect = range.getBoundingClientRect();
+  showHlPop(rect.left, rect.bottom, z1, s, en);
+});
+
+document.addEventListener('click', e => {
+  if (hlPop.contains(e.target)) return;
+  const sp = e.target.closest('span.hl');
+  if (sp) {
+    const zone = sp.closest('[data-hl-zone]');
+    if (!zone) return;
+    const s = offsetInZone(zone, sp.firstChild, 0);
+    if (s < 0) return;
+    const rect = sp.getBoundingClientRect();
+    showHlPop(rect.left, rect.bottom, zone, s, s + sp.textContent.length);
+    return;
+  }
+  const sel = window.getSelection();
+  if (sel && !sel.isCollapsed && sel.rangeCount) return;   // 刚选中文本，保留气泡
+  hideHlPop();
+}, true);
+
+hlPop.addEventListener('click', e => {
+  const btn = e.target.closest('button[data-c]');
+  if (!btn || !hlSel) return;
+  const c = btn.dataset.c;
+  const { zone, s, e: en } = hlSel;
+  const key = zone.dataset.hlZone;
+  const t = zone.textContent.slice(s, en);
+  let list = (marks[key] || []).filter(m => !(m.s < en && s < m.e));
+  if (c) list.push({ s, e: en, c, t });
+  if (list.length) marks[key] = list; else delete marks[key];
+  saveMarks();
+  applyMarksToZone(zone);
+  window.getSelection().removeAllRanges();
+  hideHlPop();
+  toast(c === 'a' ? '已标记 🟨' : c === 'b' ? '已标记 🟥' : '已移除标记');
+});
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') hideHlPop(); });
+window.addEventListener('scroll', () => { if (hlSel) hideHlPop(); }, true);
+
+/* ---- 错题本 ---- */
+function wrongEntry(qid) { return wrongBook.find(e => e && e.qid === qid); }
+function touchWrong(q) {
+  if (!q || !q.id) return;
+  let snap;
+  try { snap = JSON.parse(JSON.stringify(q)); } catch (e) { snap = q; }
+  const ex = wrongEntry(q.id);
+  if (ex) {
+    ex.wrongCount = (ex.wrongCount || 0) + 1;
+    ex.streak = 0;
+    ex.lastAt = Date.now();
+    ex.q = snap;
+  } else {
+    wrongBook.push({ qid: q.id, q: snap, wrongCount: 1, rightCount: 0, streak: 0, addedAt: Date.now(), lastAt: Date.now() });
+  }
+  saveWrongBook();
+}
+function toggleWrongManual(q) {
+  if (!q || !q.id) return;
+  const ex = wrongEntry(q.id);
+  if (ex) {
+    wrongBook = wrongBook.filter(e => e.qid !== q.id);
+    toast('已移出错题本');
+  } else {
+    let snap; try { snap = JSON.parse(JSON.stringify(q)); } catch (e) { snap = q; }
+    wrongBook.push({ qid: q.id, q: snap, wrongCount: 0, rightCount: 0, streak: 0, manual: true, addedAt: Date.now(), lastAt: Date.now() });
+    toast('已加入错题本 📕', 'ok');
+  }
+  saveWrongBook(); renderWrongBook(); syncPracticeActionButtons();
+}
+function graduateWrong(q) {
+  if (!q || practice.mode !== 'wrong') return;
+  const entry = wrongEntry(q.id);
+  if (!entry) return;
+  entry.rightCount = (entry.rightCount || 0) + 1;
+  entry.streak = (entry.streak || 0) + 1;
+  entry.lastAt = Date.now();
+  const g = (settings && settings.wrongGraduation) || 'never';
+  if (g === 'once' || (g === 'twice' && entry.streak >= 2)) {
+    wrongBook = wrongBook.filter(e => e.qid !== q.id);
+    saveWrongBook(); renderWrongBook();
+    toast('🎉 已掌握，从错题本移除', 'ok');
+  } else {
+    saveWrongBook(); renderWrongBook();
+  }
+}
+
+function renderWrongBook() {
+  const el = $('wb-count'); if (el) el.textContent = wrongBook.length;
+  const box = $('wb-list'); if (!box) return;
+  if (!wrongBook.length) { box.innerHTML = '<div class="empty-mini">错题本为空 —— 做题答错会自动收录</div>'; return; }
+  const rows = wrongBook.slice().sort((a, b) => (b.lastAt || 0) - (a.lastAt || 0)).map(e => {
+    const q = e.q || {};
+    return `<tr>
+      <td style="width:92px"><span class="badge gray" style="margin:0">${esc(typeLabel(q.type))}</span></td>
+      <td>${esc(briefOf(q))}</td>
+      <td style="width:150px" class="muted small">错 ${e.wrongCount || 0} 次 · 对 ${e.rightCount || 0} 次${e.streak ? ` · 连对 ${e.streak}` : ''}</td>
+      <td style="width:70px"><button class="icon-btn" data-wb-del="${esc(e.qid)}" title="移出错题本">✕</button></td>
+    </tr>`;
+  }).join('');
+  box.innerHTML = `<div class="table-wrap"><table><tbody>${rows}</tbody></table></div>`;
+}
+
+/* ---- 背记册 ---- */
+const MEM_STOP = new Set(('the,and,that,with,this,from,have,has,had,were,been,they,their,would,could,should,' +
+  'about,which,when,what,will,your,there,then,than,into,over,under,after,before,because,while,upon,also,' +
+  'must,shall,very,more,most,some,such,only,other,another,each,both,any,all,but,for,are,was,did,does,' +
+  'who,whom,how,why,where,may,might,can,let,us,our,you,she,him,her,his,its,not,very,these,those,here,' +
+  'been,being,did,went,goes,does,done,made,take,taken,given,get,got,like,love,look,looked,one,two,three').split(','));
+function libWordSet() {
+  const s = new Set();
+  libraries.forEach(l => (l.words || []).forEach(w => s.add(String(w.word || '').trim().toLowerCase())));
+  return s;
+}
+function escapeRegExp(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+/* 自动从句子里挖一个词作为空（优先挖词库中的词） */
+function autoMask(text, libSet) {
+  const re = /[A-Za-z][A-Za-z'’-]*/g;
+  const ms = [];
+  let m;
+  while ((m = re.exec(text))) ms.push({ word: m[0], idx: m.index });
+  if (!ms.length) return null;
+  const clean = w => w.replace(/[^A-Za-z'’-]/g, '');
+  let pick = ms.find(x => libSet.has(clean(x.word).toLowerCase()) && !MEM_STOP.has(clean(x.word).toLowerCase()));
+  if (!pick) pick = ms.filter(x => !MEM_STOP.has(clean(x.word).toLowerCase())).sort((a, b) => clean(b.word).length - clean(a.word).length)[0];
+  if (!pick) pick = ms.slice().sort((a, b) => clean(b.word).length - clean(a.word).length)[0];
+  if (!pick) return null;
+  return {
+    text: text.slice(0, pick.idx) + '___' + text.slice(pick.idx + pick.word.length),
+    answers: [pick.word]
+  };
+}
+function splitSentenceRanges(text) {
+  const out = [];
+  const re = /[^.!?。！？]+[.!?。！？]*/g;
+  let m;
+  while ((m = re.exec(text))) {
+    if (m[0].trim()) out.push({ start: m.index, end: m.index + m[0].length });
+  }
+  if (!out.length && text.trim()) out.push({ start: 0, end: text.length });
+  return out;
+}
+function listeningScriptsOf(q) {
+  const list = [];
+  if (q.subType === 'short_dialogue') (q.items || []).forEach(it => { if (it.script) list.push({ s: it.script, note: it.explanation || (it.answer ? '答案 ' + it.answer : '') }); });
+  else if (q.script) list.push({ s: q.script, note: '' });
+  return list;
+}
+
+/* 从当前题抽取可收藏的句子（挖空式） */
+function memEntriesFromQ(q) {
+  const out = [];
+  const libSet = libWordSet();
+  const add = (text, answers, note, src) => {
+    if (!text || !answers || !answers.length || out.length >= 10) return;
+    if (!/_+/.test(text)) return;
+    out.push({ text: text.trim(), answers: answers.map(String), note: String(note || '').trim(), src: src || typeLabel(q.type), qid: q.id });
+  };
+
+  if (q.type === 'verb') {
+    (q.sentences || []).forEach(s => {
+      if (/_+/.test(s.text)) add(s.text, [s.answer], [s.hint ? `提示词 ${s.hint}` : '', s.explanation || ''].filter(Boolean).join(' · '), '动词填空');
+      else { const a = autoMask(s.text, libSet); if (a) add(a.text, a.answers, s.explanation || '', '动词填空'); }
+    });
+  } else if (q.type === 'cloze') {
+    const base = q.passage || '';
+    const blanks = [];
+    const bre = /_+/g;
+    let bm;
+    while ((bm = bre.exec(base))) blanks.push({ s: bm.index, e: bm.index + bm[0].length });
+    const sents = splitSentenceRanges(base);
+    blanks.forEach((b, gi) => {
+      const target = (q.blanks || [])[gi];
+      if (!target || !target.answer) return;
+      const sen = sents.find(x => b.s >= x.start && b.s < x.end) || {
+        start: Math.max(0, b.s - 70), end: Math.min(base.length, b.e + 70)
+      };
+      const winBlanks = blanks.filter(x => x.s >= sen.start && x.e <= sen.end);
+      const tIdx = winBlanks.indexOf(b);
+      if (tIdx < 0) return;
+      let cursor = sen.start;
+      let built = '';
+      winBlanks.forEach((wb, wi) => {
+        built += base.slice(cursor, wb.s);
+        if (wi === tIdx) built += '___';
+        else { const gb = q.blanks[blanks.indexOf(wb)]; built += (gb && gb.answer) || '___'; }
+        cursor = wb.e;
+      });
+      built += base.slice(cursor);
+      const note = [target.pos ? `（${target.pos}）` : '', target.explanation || ''].filter(Boolean).join(' ');
+      add(built, [target.answer], note, '综合填空');
+    });
+  } else if (q.type === 'choice') {
+    if (q.example && q.word) {
+      const re = new RegExp(escapeRegExp(q.word), 'i');
+      if (re.test(q.example)) add(q.example.replace(re, '___'), [q.word], q.meaning || '', '例句');
+      else { const a = autoMask(q.example, libSet); if (a) add(a.text, a.answers, q.meaning || '', '例句'); }
+    }
+    const src = q.example ? '例句' : '单项选择';
+    if (q.example) { const a2 = autoMask(q.example, libSet); if (a2) add(a2.text, a2.answers, q.meaning || q.explanation || '', src); }
+    if (!q.example && q.question) { const a3 = autoMask(q.question, libSet); if (a3) add(a3.text, a3.answers, q.explanation || (q.answer ? '考点答案：' + q.answer : ''), '单项选择'); }
+  } else if (q.type === 'reading') {
+    const ranges = splitSentenceRanges(q.passage || '').slice(0, 5);
+    ranges.forEach(r => {
+      const seg = (q.passage || '').slice(r.start, r.end).trim();
+      const a = autoMask(seg, libSet);
+      if (a) add(a.text, a.answers, q.title || '', '阅读积累');
+    });
+  } else if (q.type === 'listening') {
+    listeningScriptsOf(q).forEach(sc => {
+      sc.s.split(/\n+/).forEach(line => {
+        const clean = line.replace(/^\s*[A-Za-z]{1,3}\s*[:：]\s*/, '').trim();
+        if (clean.length < 8) return;
+        const a = autoMask(clean, libSet);
+        if (a) add(a.text, a.answers, sc.note, '听力原文');
+      });
+    });
+  }
+  return out.slice(0, 10);
+}
+
+function addMemEntries(list, quiet) {
+  let added = 0, dup = 0;
+  const seen = new Set(memBook.map(e => `${e.text}\u0001${(e.answers || []).join('/')}`));
+  (list || []).forEach(e => {
+    const key = `${e.text}\u0001${e.answers.join('/')}`;
+    if (seen.has(key)) { dup++; return; }
+    seen.add(key);
+    memBook.push({
+      id: uid(), text: e.text, answers: e.answers, note: e.note || '',
+      src: e.src || '', qid: e.qid || '', right: 0, wrong: 0, addedAt: Date.now()
+    });
+    added++;
+  });
+  saveMemBook(); renderMemBook();
+  if (!quiet) toast(added ? `已加入背记册 ${added} 句${dup ? `，${dup} 句已存在` : ''}` : (dup ? '这些句子都已在背记册中' : '没有可收藏的句子'), added ? 'ok' : (dup ? '' : 'err'));
+  return added;
+}
+
+function renderMemBook() {
+  const el = $('mb-count'); if (el) el.textContent = memBook.length;
+  const box = $('mb-list'); if (!box) return;
+  if (!memBook.length) { box.innerHTML = '<div class="empty-mini">背记册为空 —— 做题时点「📖 加入背记册」收藏好句子</div>'; return; }
+  const rows = memBook.slice().sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0)).map(e => {
+    const marked = esc(e.text).replace(/_+/g, '<span class="blank">_____</span>');
+    return `<tr>
+      <td style="width:86px"><span class="badge gold" style="margin:0">${esc(e.src || '句子')}</span></td>
+      <td><div class="mb-sentence">${marked}</div><div class="mb-note">${esc((e.answers || []).join(' / '))}${e.note ? ' · ' + esc(e.note) : ''}</div></td>
+      <td style="width:92px" class="muted small">对 ${e.right || 0} · 错 ${e.wrong || 0}</td>
+      <td style="width:70px"><button class="icon-btn" data-mb-del="${esc(e.id)}" title="移出背记册">✕</button></td>
+    </tr>`;
+  }).join('');
+  box.innerHTML = `<div class="table-wrap"><table><tbody>${rows}</tbody></table></div>`;
+}
+
+$('wb-list').addEventListener('click', e => {
+  const btn = e.target.closest('button[data-wb-del]');
+  if (!btn) return;
+  wrongBook = wrongBook.filter(x => x.qid !== btn.dataset.wbDel);
+  saveWrongBook(); renderWrongBook(); toast('已移出错题本');
+});
+$('mb-list').addEventListener('click', e => {
+  const btn = e.target.closest('button[data-mb-del]');
+  if (!btn) return;
+  memBook = memBook.filter(x => x.id !== btn.dataset.mbDel);
+  saveMemBook(); renderMemBook(); toast('已移出背记册');
+});
+$('wb-clear').addEventListener('click', () => {
+  if (!wrongBook.length) { toast('错题本已经是空的'); return; }
+  if (!confirm(`确定清空错题本（${wrongBook.length} 题）？`)) return;
+  wrongBook = []; saveWrongBook(); renderWrongBook(); toast('错题本已清空');
+});
+$('mb-clear').addEventListener('click', () => {
+  if (!memBook.length) { toast('背记册已经是空的'); return; }
+  if (!confirm(`确定清空背记册（${memBook.length} 句）？`)) return;
+  memBook = []; saveMemBook(); renderMemBook(); toast('背记册已清空');
+});
+$('wb-redo').addEventListener('click', () => {
+  const list = wrongBook.map(e => e.q).filter(q => q && q.type);
+  if (!list.length) { toast('错题本为空', 'err'); return; }
+  startPracticeFrom(list, 'wrong');
+});
+
+/* ---- 背记册挖空默写 ---- */
+const mem = { list: [], pos: 0, right: 0, answered: false, solved: '' };
+
+function startMemPractice() {
+  if (!memBook.length) { toast('背记册为空', 'err'); return; }
+  mem.list = shuffle(memBook.slice());
+  mem.pos = 0;
+  mem.right = 0;
+  $('mem-practice').style.display = 'block';
+  renderMemQuestion();
+  $('mem-practice').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function exitMemPractice() {
+  stopLoop(); try { speechSynthesis.cancel(); } catch (e) {}
+  $('mem-practice').style.display = 'none';
+}
+function renderMemQuestion() {
+  const e = mem.list[mem.pos];
+  $('mem-pos').textContent = Math.min(mem.pos + 1, mem.list.length);
+  $('mem-total').textContent = mem.list.length;
+  $('mem-right').textContent = mem.right;
+  if (!e) {
+    toast(`默写完成：正确 ${mem.right} / ${mem.list.length}`, 'ok');
+    exitMemPractice();
+    return;
+  }
+  mem.answered = false;
+  mem.solved = '';
+  let html = '';
+  let bi = 0;
+  let last = 0;
+  let m;
+  const re = /_+/g;
+  while ((m = re.exec(e.text))) {
+    html += esc(e.text.slice(last, m.index));
+    const ans = (e.answers || [])[bi];
+    html += ans
+      ? `<input class="mem-input" data-mi="${bi}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="${ans.replace(/[^A-Za-z]/g, '').length || 1}字母">`
+      : '<span class="blank" style="color:var(--accent);font-weight:600">_____</span>';
+    bi++;
+    last = m.index + m[0].length;
+  }
+  html += esc(e.text.slice(last));
+  $('mem-sentence').innerHTML = html;
+  $('mem-src').textContent = [e.src, e.note].filter(Boolean).join(' · ');
+  $('mem-feedback').textContent = '';
+  $('mem-feedback').className = 'feedback';
+  $('mem-sentence').querySelectorAll('.mem-input').forEach(inp => {
+    inp.addEventListener('keydown', ev => {
+      if (ev.key !== 'Enter') return;
+      ev.preventDefault();
+      if (mem.answered) memNext(); else memSubmit();
+    });
+  });
+  const first = $('mem-sentence').querySelector('.mem-input');
+  if (first) first.focus();
+}
+function memSolvedText(e) {
+  let bi = 0;
+  return e.text.replace(/_+/g, () => (e.answers || [])[bi++] ?? '_____');
+}
+function memSubmit() {
+  const e = mem.list[mem.pos];
+  if (!e || mem.answered) return;
+  const inputs = [...$('mem-sentence').querySelectorAll('.mem-input')];
+  if (!inputs.length) { toast('该句没有可输入的空', 'err'); return; }
+  if (!inputs.some(i => i.value.trim())) { toast('请输入答案', 'err'); if (inputs[0]) inputs[0].focus(); return; }
+  mem.answered = true;
+  let allRight = true;
+  inputs.forEach(inp => {
+    const i = parseInt(inp.dataset.mi);
+    const ans = String((e.answers || [])[i] || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    const val = inp.value.trim().toLowerCase().replace(/\s+/g, ' ');
+    const ok = !!val && val === ans;
+    inp.classList.add(ok ? 'correct' : 'wrong');
+    inp.disabled = true;
+    if (!ok) allRight = false;
+  });
+  const solved = memSolvedText(e);
+  mem.solved = solved;
+  e.noteShown = true;
+  if (allRight) {
+    mem.right++;
+    e.right = (e.right || 0) + 1;
+    statMem(true);
+    $('mem-feedback').className = 'feedback ok';
+    $('mem-feedback').innerHTML = `✅ 正确${e.note ? '　' + esc(e.note) : ''}`;
+    speak(solved, { rate: 0.9 });
+    setTimeout(() => { if (mem.answered && mem.list[mem.pos] === e) memNext(); }, 1400);
+  } else {
+    e.wrong = (e.wrong || 0) + 1;
+    statMem(false);
+    $('mem-feedback').className = 'feedback err';
+    $('mem-feedback').innerHTML = `❌ 正确答案：<b>${esc((e.answers || []).join(' / '))}</b>${e.note ? '　' + esc(e.note) : ''}
+      <div class="small muted" style="margin-top:4px">${esc(solved)}</div>`;
+    speak(solved, { rate: 0.85 });
+  }
+  saveMemBook(); renderMemBook();
+  $('mem-right').textContent = mem.right;
+}
+function memNext() {
+  mem.pos++;
+  renderMemQuestion();
+}
+$('mb-dict').addEventListener('click', startMemPractice);
+$('mem-submit').addEventListener('click', memSubmit);
+$('mem-next').addEventListener('click', memNext);
+$('mem-exit').addEventListener('click', () => { exitMemPractice(); toast('已退出默写'); });
+$('mem-hint').addEventListener('click', () => {
+  const e = mem.list[mem.pos];
+  if (!e || mem.answered) return;
+  const inputs = [...$('mem-sentence').querySelectorAll('.mem-input')];
+  const target = inputs.find(i => !i.value.trim());
+  if (!target) return;
+  const ans = String((e.answers || [])[parseInt(target.dataset.mi)] || '');
+  target.value = ans.slice(0, 1);
+  target.focus();
+  target.setSelectionRange(1, 1);
+  $('mem-feedback').className = 'feedback';
+  $('mem-feedback').textContent = `提示：${ans.slice(0, 1)}${' _'.repeat(Math.max(0, ans.replace(/\s/g, '').length - 1))}`;
+});
+$('mem-speak').addEventListener('click', () => {
+  const e = mem.list[mem.pos];
+  if (!e) return;
+  if (!mem.answered) { toast('提交答案后可听完整句子', 'err'); return; }
+  speak(mem.solved || memSolvedText(e), { rate: 0.9 });
+});
+
+/* =========================================================
    练习流程
    ========================================================= */
-const practice = { list: [], pos: 0, right: 0, answered: false, state: {} };
+const practice = { list: [], pos: 0, right: 0, mode: 'bank', state: {}, _answered: false };
+Object.defineProperty(practice, 'answered', {
+  get() { return this._answered; },
+  set(v) {
+    this._answered = !!v;
+    if (this._answered) {
+      const q = this.list[this.pos];
+      if (q && this.state && !this.state.sawWrong) graduateWrong(q);
+    }
+  }
+});
 
 function startPractice() {
   const typeF = $('bank-filter-type').value;
   const diffF = $('bank-filter-diff').value;
+  const flagF = $('bank-filter-flag').value;
   const kw = $('bank-search').value.trim().toLowerCase();
   let list = bank.slice();
   if (typeF !== 'all') list = list.filter(q => q.type === typeF);
   if (diffF !== 'all') list = list.filter(q => clamp(parseInt(q.difficulty)||1,1,5) === parseInt(diffF));
+  if (flagF === 'flagged') list = list.filter(q => q.flagged);
+  else if (flagF === 'unflagged') list = list.filter(q => !q.flagged);
   if (kw) list = list.filter(q => JSON.stringify(q).toLowerCase().includes(kw));
   if (!list.length) { toast('没有符合条件的题目', 'err'); return; }
+  startPracticeFrom(list, 'bank');
+}
+function startPracticeFrom(list, mode) {
+  if (!list || !list.length) { toast('没有可练习的题目', 'err'); return; }
   shuffle(list);
   practice.list = list;
   practice.pos = 0;
   practice.right = 0;
   practice.answered = false;
+  practice.mode = mode || 'bank';
   practice.state = {};
+  $('tabs').querySelector('[data-tab="bank"]').click();
   $('bank-practice').style.display = 'block';
   $('bank-list-card').style.display = 'none';
   renderPractice();
@@ -2869,6 +3821,35 @@ function exitPractice() {
 $('bank-start').addEventListener('click', startPractice);
 $('bank-shuffle').addEventListener('click', startPractice);
 $('bank-exit').addEventListener('click', exitPractice);
+$('bank-flag').addEventListener('click', () => {
+  const q = practice.list[practice.pos];
+  if (!q) return;
+  toggleFlag(q);
+});
+$('bank-wrong-btn').addEventListener('click', () => {
+  const q = practice.list[practice.pos];
+  if (!q) return;
+  toggleWrongManual(q);
+});
+$('bank-mem-btn').addEventListener('click', () => {
+  const q = practice.list[practice.pos];
+  if (!q) return;
+  const entries = memEntriesFromQ(q);
+  if (!entries.length) { toast('该题暂无可收藏的句子', 'err'); return; }
+  addMemEntries(entries);
+});
+
+function toggleFlag(q) {
+  if (!q) return;
+  const inBank = q.id ? bank.find(x => x.id === q.id) : null;
+  const t = inBank || q;
+  t.flagged = !t.flagged;
+  q.flagged = t.flagged;
+  if (inBank) saveBank();
+  renderBankList();
+  syncPracticeActionButtons();
+  toast(t.flagged ? '已标记本题 🚩' : '已取消标记');
+}
 
 function renderPractice() {
   stopListening();
@@ -2887,7 +3868,8 @@ function renderPractice() {
     blankAnswered: new Set(),
     verbAnswered: new Set(),
     listenPlayed: 0,
-    listenItemPlayed: {}
+    listenItemPlayed: {},
+    sawWrong: false
   };
 
   const area = $('bank-question-area');
@@ -2901,6 +3883,7 @@ function renderPractice() {
   else if (q.type === 'listening') html = renderListening(q);
   else if (q.type === 'writing') html = renderWriting(q);
   area.innerHTML = html;
+  applyAllMarks(area);
 
   // 事件绑定
   if (q.type === 'verb') {
@@ -2924,6 +3907,19 @@ function renderPractice() {
     const ta = area.querySelector('#writing-input');
     if (ta) ta.focus();
   }
+  syncPracticeActionButtons();
+}
+
+function syncPracticeActionButtons() {
+  const q = practice.list[practice.pos];
+  const fb = $('bank-flag'), wb = $('bank-wrong-btn'), mb = $('bank-mem-btn');
+  if (!fb || !wb || !mb) return;
+  fb.classList.toggle('on', !!(q && q.flagged));
+  fb.textContent = q && q.flagged ? '🚩 已标记 · 点击取消' : '🚩 标记本题';
+  const inW = !!(q && q.id && wrongEntry(q.id));
+  wb.classList.toggle('on', inW);
+  wb.textContent = inW ? '📕 在错题本 · 点击移出' : '📕 加入错题本';
+  mb.style.display = q && q.type === 'writing' ? 'none' : '';
 }
 
 /* ---- 四选一 / 自由输入 切换 ---- */
@@ -2951,6 +3947,7 @@ function rerenderCurrentQuestion() {
     const prevState = practice.state;
     area.innerHTML = html;
     practice.state = prevState;
+    applyAllMarks(area);
     if (q.type === 'verb') {
       area.querySelectorAll('input[data-vidx]').forEach(inp => {
         inp.addEventListener('keydown', e => {
@@ -2991,7 +3988,7 @@ function renderReading(q) {
         <span class="tag">难度 ${starLabel(q.difficulty)}</span>
       </div>
       <h3 style="font-family:var(--serif);font-size:17px;margin:0 0 12px;font-weight:600">${esc(q.title)}</h3>
-      <div class="passage">${esc(q.passage)}</div>
+      <div class="passage" data-hl-zone="${esc((q.id || 'q') + ':reading')}">${esc(q.passage)}</div>
       ${q.questions.map((sq, qi) => `
         <div class="sub-q" data-sidx="${qi}">
           <p class="sub-q-text"><span class="sub-q-head">Q${qi+1}.</span>${esc(sq.question)}</p>
@@ -3058,7 +4055,7 @@ function renderCloze(q) {
         <span class="tag">共 ${q.blanks.length} 空</span>
       </div>
       ${toolbar}
-      <div class="passage">${text}</div>
+      <div class="passage" data-hl-zone="${esc((q.id || 'q') + ':cloze')}">${text}</div>
       ${rows ? `<div style="margin-top:14px">${rows}</div>` : ''}
       <div class="q-result-area"></div>
     </div>`;
@@ -3104,7 +4101,7 @@ function renderVerb(q) {
         </div>`
       : '';
     return `<div class="verb-sentence" data-vidx="${i}">
-      <div class="sent"><span class="label-num">${i+1}.</span>${inner}</div>
+      <div class="sent" data-hl-zone="${esc((q.id || 'q') + ':v' + i)}"><span class="label-num">${i+1}.</span>${inner}</div>
       ${optionsRow}
       <div class="result-line"></div>
     </div>`;
@@ -3190,7 +4187,7 @@ function renderListeningLong(q) {
           <button id="ll-script-toggle">👁 显示原文</button>
         </div>
       </div>
-      <div class="listening-script hidden" id="ll-script">${esc(q.script)}</div>
+      <div class="listening-script hidden" id="ll-script" data-hl-zone="${esc((q.id || 'q') + ':ll')}">${esc(q.script)}</div>
       ${q.questions.map((sq, qi) => `
         <div class="sub-q" data-sidx="${qi}">
           <p class="sub-q-text"><span class="sub-q-head">Q${qi+1}.</span>${esc(sq.question)}</p>
@@ -3238,7 +4235,7 @@ function renderListeningTable(q) {
           <button id="lt-script-toggle">👁 显示原文</button>
         </div>
       </div>
-      <div class="listening-script hidden" id="lt-script">${esc(q.script)}</div>
+      <div class="listening-script hidden" id="lt-script" data-hl-zone="${esc((q.id || 'q') + ':lt')}">${esc(q.script)}</div>
       <table class="listening-table">
         <thead><tr>${headerHtml}</tr></thead>
         <tbody>${rowsHtml}</tbody>
@@ -3252,7 +4249,7 @@ function renderWriting(q) {
   return `
     <div class="q-card">
       <div class="q-meta"><span class="tag accent">作文</span><span class="tag">难度 ${starLabel(q.difficulty)}</span></div>
-      <p class="writing-prompt">${esc(q.prompt)}</p>
+      <p class="writing-prompt" data-hl-zone="${esc((q.id || 'q') + ':w')}">${esc(q.prompt)}</p>
       ${q.hints.length ? `<ul class="writing-hints">${q.hints.map(h => `<li>${esc(h)}</li>`).join('')}</ul>` : ''}
       <textarea id="writing-input" class="writing-area" placeholder="在此处用英文写作…"></textarea>
       <div class="row" style="margin-top:12px">
@@ -3360,6 +4357,7 @@ function checkClozeInput(q) {
     if (!val) { allDone = false; return; }
     const b = q.blanks[idx];
     const correct = val === b.answer.toLowerCase();
+    recordItem(q, correct, b.point || q.point);
     practice.state.blankAnswered.add(idx);
     inp.classList.add(correct ? 'correct' : 'wrong');
     inp.disabled = true;
@@ -3385,6 +4383,7 @@ function checkVerb(q) {
     const val = inp.value.trim().toLowerCase();
     if (!val) return;
     const correct = val === s.answer.toLowerCase();
+    recordItem(q, correct, s.point || q.point);
     practice.state.verbAnswered.add(idx);
     inp.classList.add(correct ? 'correct' : 'wrong');
     inp.disabled = true;
@@ -3412,6 +4411,7 @@ function checkListeningTable(q) {
     const blank = q.blanks.find(b => b.row === row && b.col === col);
     if (!blank) return;
     const correct = val.toLowerCase() === blank.answer.toLowerCase();
+    recordItem(q, correct, blank.point || q.point);
     practice.state.blankAnswered.add(key);
     inp.classList.add(correct ? 'correct' : 'wrong');
     inp.disabled = true;
@@ -3440,9 +4440,10 @@ $('bank-question-area').addEventListener('click', e => {
   if (q.type === 'choice') {
     const opt = e.target.closest('.q-option');
     if (!opt || practice.answered) return;
-    practice.answered = true;
     const val = opt.dataset.val;
     const correct = val === q.answer;
+    recordItem(q, correct);
+    practice.answered = true;
     if (correct) { practice.right++; $('bank-right').textContent = practice.right; }
     [...opt.parentElement.querySelectorAll('.q-option')].forEach(b => {
       b.disabled = true;
@@ -3464,6 +4465,7 @@ $('bank-question-area').addEventListener('click', e => {
     const sq = q.questions[sidx];
     const val = opt.dataset.val;
     const correct = val === sq.answer;
+    recordItem(q, correct, sq.point || q.point);
     if (correct) practice.right++;
     $('bank-right').textContent = practice.right;
     [...opt.parentElement.querySelectorAll('.q-option')].forEach(b => {
@@ -3490,6 +4492,7 @@ $('bank-question-area').addEventListener('click', e => {
     const b = q.blanks[bidx];
     const val = opt.dataset.val;
     const correct = val === b.answer;
+    recordItem(q, correct, b.point || q.point);
     if (correct) practice.right++;
     $('bank-right').textContent = practice.right;
     [...opt.parentElement.querySelectorAll('.blank-opt')].forEach(x => {
@@ -3523,6 +4526,7 @@ $('bank-question-area').addEventListener('click', e => {
     const s = q.sentences[bidx];
     const val = opt.dataset.val;
     const correct = val === s.answer;
+    recordItem(q, correct, s.point || q.point);
     if (correct) practice.right++;
     $('bank-right').textContent = practice.right;
     [...opt.parentElement.querySelectorAll('.blank-opt')].forEach(x => {
@@ -3556,6 +4560,7 @@ $('bank-question-area').addEventListener('click', e => {
       const item = q.items[lidx];
       const val = opt.dataset.val;
       const correct = val === item.answer;
+      recordItem(q, correct, item.point || q.point);
       if (correct) practice.right++;
       $('bank-right').textContent = practice.right;
       [...opt.parentElement.querySelectorAll('.q-option')].forEach(b => {
@@ -3579,6 +4584,7 @@ $('bank-question-area').addEventListener('click', e => {
       const sq = q.questions[sidx];
       const val = opt.dataset.val;
       const correct = val === sq.answer;
+      recordItem(q, correct, sq.point || q.point);
       if (correct) practice.right++;
       $('bank-right').textContent = practice.right;
       [...opt.parentElement.querySelectorAll('.q-option')].forEach(b => {
@@ -3680,11 +4686,13 @@ $('bank-reveal').addEventListener('click', () => {
       b.disabled = true;
       if (b.dataset.val === q.answer) b.classList.add('correct');
     });
+    if (!practice.answered) recordItem(q, false);
     practice.answered = true;
   } else if (q.type === 'reading') {
     q.questions.forEach((sq, i) => {
       const el = area.querySelector(`.sub-q[data-sidx="${i}"]`);
       if (!el) return;
+      if (!practice.state.subAnswered.has(i)) recordItem(q, false, sq.point || q.point);
       [...el.querySelectorAll('.q-option')].forEach(b => {
         b.disabled = true;
         if (b.dataset.val === sq.answer) b.classList.add('correct');
@@ -3699,6 +4707,7 @@ $('bank-reveal').addEventListener('click', () => {
       q.blanks.forEach((b, i) => {
         const row = area.querySelector(`.blank-row[data-bidx="${i}"]`);
         if (!row) return;
+        if (!practice.state.blankAnswered.has(i)) recordItem(q, false, b.point || q.point);
         [...row.querySelectorAll('.blank-opt')].forEach(x => {
           x.disabled = true;
           if (x.dataset.val === b.answer) x.classList.add('correct');
@@ -3710,6 +4719,7 @@ $('bank-reveal').addEventListener('click', () => {
       inputs.forEach(inp => {
         const i = parseInt(inp.dataset.cidx);
         const b = q.blanks[i];
+        if (!practice.state.blankAnswered.has(i)) recordItem(q, false, b.point || q.point);
         inp.value = b.answer;
         inp.disabled = true;
         inp.classList.add('correct');
@@ -3724,6 +4734,7 @@ $('bank-reveal').addEventListener('click', () => {
       q.sentences.forEach((s, i) => {
         const optsBox = area.querySelector(`.blank-opts[data-bidx="${i}"]`);
         if (!optsBox) return;
+        if (!practice.state.verbAnswered.has(i)) recordItem(q, false, s.point || q.point);
         [...optsBox.querySelectorAll('.blank-opt')].forEach(x => {
           x.disabled = true;
           if (x.dataset.val === s.answer) x.classList.add('correct');
@@ -3737,6 +4748,7 @@ $('bank-reveal').addEventListener('click', () => {
       inputs.forEach(inp => {
         const i = parseInt(inp.dataset.vidx);
         const s = q.sentences[i];
+        if (!practice.state.verbAnswered.has(i)) recordItem(q, false, s.point || q.point);
         inp.value = s.answer;
         inp.disabled = true;
         inp.classList.add('correct');
@@ -3751,6 +4763,7 @@ $('bank-reveal').addEventListener('click', () => {
       q.items.forEach((it, i) => {
         const el = area.querySelector(`.listening-item[data-lidx="${i}"]`);
         if (!el) return;
+        if (!practice.state.subAnswered.has('l' + i)) recordItem(q, false, it.point || q.point);
         [...el.querySelectorAll('.q-option')].forEach(b => {
           b.disabled = true;
           if (b.dataset.val === it.answer) b.classList.add('correct');
@@ -3763,6 +4776,7 @@ $('bank-reveal').addEventListener('click', () => {
       q.questions.forEach((sq, i) => {
         const el = area.querySelector(`.sub-q[data-sidx="${i}"]`);
         if (!el) return;
+        if (!practice.state.subAnswered.has(i)) recordItem(q, false, sq.point || q.point);
         [...el.querySelectorAll('.q-option')].forEach(b => {
           b.disabled = true;
           if (b.dataset.val === sq.answer) b.classList.add('correct');
@@ -3778,10 +4792,12 @@ $('bank-reveal').addEventListener('click', () => {
       q.blanks.forEach(b => {
         const inp = area.querySelector(`input[data-trow="${b.row}"][data-tcol="${b.col}"]`);
         if (!inp) return;
+        const key = b.row + ',' + b.col;
+        if (!practice.state.blankAnswered.has(key)) recordItem(q, false, q.point);
         inp.value = b.answer;
         inp.disabled = true;
         inp.classList.add('correct');
-        practice.state.blankAnswered.add(b.row + ',' + b.col);
+        practice.state.blankAnswered.add(key);
       });
       const scr = area.querySelector('#lt-script');
       if (scr) scr.classList.remove('hidden');
@@ -3950,14 +4966,21 @@ function buildVocabBlock() {
 
 /* 各题型必须落到 JSON 里的字段要求（写进用户消息，不受已保存的自定义提示词影响） */
 function buildFieldRules(type) {
+  let out = '';
+  if (['choice', 'reading', 'cloze', 'verb', 'listening'].includes(type)) {
+    out += `- 每道小题（或每道题）必须提供 point 字段：该题考查的语法/知识点，简短中文，如「一般过去时」「宾语从句」「固定搭配」「词义辨析」；若无明显考点写「综合」。\n`;
+  }
+  if (['choice', 'reading', 'cloze', 'listening'].includes(type)) {
+    out += `- 正确答案的选项位置（A/B/C/D）请尽量均匀分散，避免连续多题正确答案落在同一字母。\n`;
+  }
   if (type === 'cloze') {
-    return `- 每个空必须给出 pos 字段：该空答案的词性，取值只能是 名词 / 动词 / 形容词 / 副词 / 数词 / 冠词 / 代词 / 介词 / 连词。
+    out += `- 每个空必须给出 pos 字段：该空答案的词性，取值只能是 名词 / 动词 / 形容词 / 副词 / 数词 / 冠词 / 代词 / 介词 / 连词。
 - 如果该空答案是代词、介词或连词，pos 必须为空字符串 ""（这三类不做提示）。
 - pos 会在学生自由填词（非四选一）时显示成「（名词）」这样的提示，请务必判断准确，避免同一个空出现多种可接受答案。
 - 无论是否给出选项，每个空都必须有 answer 与 pos。
 `;
   }
-  return '';
+  return out;
 }
 
 function buildPromptForType(type, topic, difficulty, count, level, listeningSub) {
@@ -4021,6 +5044,7 @@ $('ai-gen').addEventListener('click', async () => {
       return normalizeQuestion(item);
     }).filter(Boolean);
     if (!list.length) throw new Error('AI 返回的题目无法解析，请检查提示词或换模型重试');
+    spreadAnswerLetters(list);
 
     aiGenerated = list;
     renderAIQuestions(list);
@@ -4230,6 +5254,8 @@ function fillSettingsUI() {
   $('set-model').value = settings.model || '';
   $('set-temp').value = settings.temperature;
   $('set-temp-val').textContent = (+settings.temperature).toFixed(2);
+  $('set-grad').value = settings.wrongGraduation || 'never';
+  $('set-autowrong').checked = settings.autoWrong !== false;
   renderPromptEditor('choice');
 }
 
@@ -4249,6 +5275,8 @@ $('set-save').addEventListener('click', () => {
   settings.key = $('set-key').value.trim();
   settings.model = $('set-model').value.trim();
   settings.temperature = +$('set-temp').value;
+  settings.wrongGraduation = $('set-grad').value;
+  settings.autoWrong = $('set-autowrong').checked;
   saveSettings();
   $('set-status').textContent = '配置已保存';
   $('set-status').className = 'ai-status ok';
@@ -4312,6 +5340,10 @@ $('data-export').addEventListener('click', () => {
     })),
     activeLibId,
     bank: bank.map(({ id, ...rest }) => rest),
+    wrongBook,
+    memBook,
+    stats,
+    marks,
     settings
   };
   const blob = new Blob([JSON.stringify(dump, null, 2)], { type: 'application/json;charset=utf-8' });
@@ -4351,6 +5383,10 @@ $('data-file').addEventListener('change', e => {
         bank = ensureQIds(d.bank);
         saveBank(); renderBankList();
       }
+      if (Array.isArray(d.wrongBook)) { wrongBook = d.wrongBook.filter(e => e && e.qid); saveWrongBook(); renderWrongBook(); }
+      if (Array.isArray(d.memBook)) { memBook = d.memBook.filter(e => e && e.text); saveMemBook(); renderMemBook(); }
+      if (d.stats && typeof d.stats === 'object') { stats = normalizeStats(d.stats); saveStats(); }
+      if (d.marks && typeof d.marks === 'object') { marks = d.marks; saveMarks(); }
       if (d.settings) {
         settings = { ...defaultSettings(), ...d.settings, prompts: { ...DEFAULT_PROMPTS, ...(d.settings.prompts || {}) } };
         saveSettings(); fillSettingsUI();
@@ -4373,6 +5409,10 @@ $('data-reset').addEventListener('click', () => {
     localStorage.removeItem(BANK_KEY);
     localStorage.removeItem(SETTINGS_KEY);
     localStorage.removeItem(LEGACY_WORDS_KEY);
+    localStorage.removeItem(WRONG_KEY);
+    localStorage.removeItem(MEM_KEY);
+    localStorage.removeItem(STATS_KEY);
+    localStorage.removeItem(MARKS_KEY);
   } catch (e) {}
   location.reload();
 });
@@ -4400,6 +5440,13 @@ function syncLibSelectors() {
   listenSel = new Set([activeLibId]);
   dictSel = new Set([activeLibId]);
   aiSel = new Set([activeLibId]);
+
+  loadWrongBook();
+  loadMemBook();
+  loadStats();
+  loadMarks();
+  renderWrongBook();
+  renderMemBook();
 
   renderWords();
   bank = loadBank();
