@@ -255,6 +255,134 @@ async function run() {
   check('练习模式仍即时判分', $('bank-question-area').querySelector('.q-option.correct, .q-option.wrong') !== null);
   ev(`exitPractice()`);
 
+  console.log('# 9. AI 全新出卷');
+  ev(`settings.endpoint = 'https://api.example.com/v1'; settings.key = 'k'; settings.model = 'm';`);
+  const bankBefore = ev('bank.length');
+  w.__aiCalls = [];
+  w.__aiFail = false;
+  w.callChat = async function (msgs) {
+    const user = msgs.map(m => m.content || '').join('\n');
+    if (w.__aiFail) throw new Error('模拟 API 故障');
+    w.__aiCalls.push(user);
+    const type = (user.match(/题型：([^\n]+)/) || [])[1] || '';
+    const sub = (user.match(/听力子题型：(\w+)/) || [])[1] || 'short_dialogue';
+    if (type.includes('单项选择')) return JSON.stringify([{ question: 'Which one?', options: ['x', 'y', 'z', 'w'], answer: 'x', explanation: '', difficulty: 3 }]);
+    if (type.includes('阅读理解')) return JSON.stringify([{ level: 'A', title: 'T', passage: 'Passage text for testing.', questions: [
+      { question: 'Q1?', options: ['p', 'q', 'r', 's'], answer: 'p', explanation: '' },
+      { question: 'Q2?', options: ['p', 'q', 'r', 's'], answer: 'q', explanation: '' }], difficulty: 3 }]);
+    if (type.includes('综合填空')) return JSON.stringify([{ passage: 'I ___ an apple and he ___ bananas.', blanks: [
+      { options: ['eat', 'eats', 'eating', 'ate'], answer: 'eat', pos: '动词', explanation: '' },
+      { options: ['eat', 'eats', 'eating', 'ate'], answer: 'eats', pos: '动词', explanation: '' }], difficulty: 3 }]);
+    if (type.includes('动词填空')) return JSON.stringify([{ sentences: [
+      { text: 'He ___ (go) home.', answer: 'went', hint: 'go', explanation: '' },
+      { text: 'They ___ (be) happy.', answer: 'are', hint: 'be', explanation: '' }], difficulty: 3 }]);
+    if (type.includes('听力题')) {
+      if (sub === 'long_dialogue') return JSON.stringify([{ subType: 'long_dialogue', script: 'W: Hi\nM: Hello', questions: [{ question: 'LQ?', options: ['a', 'b', 'c'], answer: 'a', explanation: '' }], difficulty: 3 }]);
+      return JSON.stringify([{ subType: 'short_dialogue', items: [{ script: 'W: Hi', question: 'SQ?', options: ['a', 'b', 'c'], answer: 'a', explanation: '' }], difficulty: 3 }]);
+    }
+    if (type.includes('作文')) return JSON.stringify([{ prompt: 'Write about your school.', hints: ['60 words'], sample: 'Sample.', difficulty: 3 }]);
+    return JSON.stringify([]);
+  };
+  ev(`window.callChat = window.callChat;`);
+  $('bank-exam-start').click();
+  const radioAI = w.document.querySelector('input[name="exam-source"][value="ai"]');
+  check('来源切换器存在', !!radioAI);
+  radioAI.checked = true;
+  radioAI.dispatchEvent(new w.Event('change', { bubbles: true }));
+  check('切换到 AI 出卷', ev('exam.source') === 'ai');
+  check('AI 板块预览', /AI 生成/.test($('exam-setup').textContent), $('exam-setup').textContent.replace(/\s+/g, ' ').slice(0, 160));
+  check('AI 选项可见', !!$('exam-ai-diff') && !!$('exam-ai-topic'));
+  check('开始按钮可用', $('exam-begin').disabled === false);
+  $('exam-begin').click();
+  for (let i = 0; i < 300 && !ev('exam.active'); i++) await new Promise(r => setTimeout(r, 10));
+  check('AI 卷已开始', ev('exam.active') === true);
+  check('AI 调用 7 次（听力 2 组）', w.__aiCalls.length === 7, w.__aiCalls.length);
+  check('6 个板块', ev('exam.sections.length') === 6, ev('exam.sections.map(s=>s.label).join(",")'));
+  check('生成 7 道题', ev('exam.paper.length') === 7, ev('exam.paper.length'));
+  check('AI 题目未入题库', ev('bank.length') === bankBefore, ev('bank.length'));
+  const aiQs = JSON.parse(ev('JSON.stringify(exam.paper.map(r=>r.q))'));
+  const aiSubs = aiQs.reduce((n, q) => n + subCount(q), 0);
+  check('AI 卷计分小题 ' + aiSubs, expected() === aiSubs, expected());
+  answerAll('right');
+  $('exam-submit').click();
+  const aiScore = ev('exam.stats.right') + '/' + ev('exam.stats.total');
+  check('AI 卷满分 ' + aiSubs + '/' + aiSubs, aiScore === aiSubs + '/' + aiSubs, ev('JSON.stringify(exam.stats)'));
+  check('报告标注 AI 出卷', /AI 全新出卷/.test($('exam-report').textContent));
+  check('报告有入库按钮', !!$('exam-save-bank'));
+  $('exam-save-bank').click();
+  check('入库 +7 题', ev('bank.length') === bankBefore + 7, ev('bank.length'));
+  check('入库按钮已禁用', $('exam-save-bank').disabled === true);
+  check('题库列表已刷新', $('bank-list').children.length > 0);
+
+  console.log('# 10. AI 出卷失败回退');
+  w.__aiFail = true;
+  $('bank-exam-start').click();
+  $('exam-begin').click();
+  for (let i = 0; i < 300 && ev('exam.generating'); i++) await new Promise(r => setTimeout(r, 10));
+  check('失败后未进入考试', ev('exam.active') === false);
+  check('状态显示失败', /失败/.test($('exam-gen-status').textContent), $('exam-gen-status').textContent);
+  check('状态为 err', $('exam-gen-status').classList.contains('err'));
+  check('仍停留在组卷页', $('exam-setup').style.display === 'block');
+  w.__aiFail = false;
+  ev(`closeExam(true)`);
+
+  console.log('# 11. 快速加句（tab 栏按钮 → 背记册）');
+  check('触发按钮存在', !!$('mq-trigger') && /快速加句/.test($('mq-trigger').textContent));
+  const mb0 = ev('memBook.length');
+  $('mq-trigger').click();
+  check('面板打开', $('mq-panel').classList.contains('show') === true);
+  check('aria-expanded', $('mq-trigger').getAttribute('aria-expanded') === 'true');
+  check('计数显示已有 N 句', $('mq-count').textContent === `已有 ${mb0} 句`, $('mq-count').textContent);
+  $('qa-trigger').click();
+  check('打开加词时加句面板关闭', $('mq-panel').classList.contains('show') === false && $('qa-panel').classList.contains('show') === true);
+  $('qa-trigger').click();
+  $('mq-trigger').click();
+  check('打开加句时加词面板关闭', $('qa-panel').classList.contains('show') === false && $('mq-panel').classList.contains('show') === true);
+
+  $('mq-text').value = [
+    'She has been to Beijing twice. | 去过北京两次',
+    'It is important to [protect] the environment.',
+    '12345'
+  ].join('\n');
+  $('mq-add').click();
+  for (let i = 0; i < 300 && ev('document.getElementById("mq-add").disabled'); i++) await new Promise(r => setTimeout(r, 10));
+  check('加入 2 句', ev('memBook.length') === mb0 + 2, ev('memBook.length'));
+  check('状态含加入 2 句', /已加入 2 句/.test($('mq-status').textContent), $('mq-status').textContent);
+  check('状态提示 1 行无法挖空', /1 行无法挖空/.test($('mq-status').textContent), $('mq-status').textContent);
+  check('状态为 ok', $('mq-status').classList.contains('ok'));
+  check('输入框已清空', $('mq-text').value === '');
+  const ent = JSON.parse(ev('JSON.stringify(memBook.slice(-2).map(e=>({text:e.text,answers:e.answers,note:e.note,src:e.src})))'));
+  check('条目含挖空与答案', ent.every(e => /_+/.test(e.text) && e.answers.length === (e.text.match(/_+/g) || []).length), JSON.stringify(ent));
+  check('[word] 指定的词入答案', ent.some(e => e.answers.includes('protect')), JSON.stringify(ent));
+  check('中文提示保留', ent.some(e => e.note === '去过北京两次'), JSON.stringify(ent));
+  check('来源标记', ent.every(e => e.src === '快速加句'), JSON.stringify(ent));
+  check('计数已更新', $('mq-count').textContent === `已有 ${mb0 + 2} 句`, $('mq-count').textContent);
+
+  $('mq-text').value = 'She has been to Beijing twice. | 去过北京两次';
+  $('mq-add').click();
+  for (let i = 0; i < 300 && ev('document.getElementById("mq-add").disabled'); i++) await new Promise(r => setTimeout(r, 10));
+  check('重复句不重复入册', ev('memBook.length') === mb0 + 2, ev('memBook.length'));
+  check('状态提示已存在', /1 句已存在/.test($('mq-status').textContent), $('mq-status').textContent);
+
+  check('AI 补提示开关存在', !!$('mq-ai'));
+  $('mq-ai').checked = true;
+  w.callChat = async function (msgs) {
+    const user = msgs.filter(m => m.role === 'user').map(m => m.content).join('\n');
+    return JSON.stringify([{ text: user.trim(), note: '这本书我读了三遍。' }]);
+  };
+  $('mq-text').value = 'I have read this book three times.';
+  $('mq-add').click();
+  for (let i = 0; i < 300 && ev('document.getElementById("mq-add").disabled'); i++) await new Promise(r => setTimeout(r, 10));
+  const last = JSON.parse(ev('JSON.stringify(memBook[memBook.length-1])'));
+  check('AI 句已入册', ev('memBook.length') === mb0 + 3, ev('memBook.length'));
+  check('AI 补的中文提示', /读了三遍/.test(last.note), JSON.stringify(last));
+
+  ev(`renderMemBook()`);
+  check('背记册列表计数同步', $('mb-count').textContent === String(ev('memBook.length')), $('mb-count').textContent);
+  check('背记册列表含新句', /Beijing/.test($('mb-list').textContent), $('mb-list').textContent.slice(0, 120));
+  w.document.body.click();
+  check('面板已关闭', $('mq-panel').classList.contains('show') === false);
+
   console.log(`\n${pass} passed, ${fail} failed`);
   if (errors.length) { console.log('page errors:'); errors.forEach(e => console.log('  ' + e)); }
   process.exit(fail || errors.length ? 1 : 0);

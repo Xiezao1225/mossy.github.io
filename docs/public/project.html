@@ -41,7 +41,7 @@ body::before{
 .tab.active{color:var(--ink);font-weight:600}
 .tab.active::after{content:'';position:absolute;left:16px;right:16px;bottom:-1px;height:2px;background:var(--accent)}
 
-.qa-wrap{position:relative;margin-left:auto;display:flex;align-items:center}
+.qa-wrap{position:relative;margin-left:auto;display:flex;align-items:center;gap:8px}
 .qa-trigger{appearance:none;background:none;border:1px solid var(--rule);cursor:pointer;font-family:var(--sans);font-size:13px;color:var(--ink);padding:7px 12px;border-radius:2px;white-space:nowrap;transition:border-color .16s,color .16s}
 .qa-trigger:hover,.qa-trigger[aria-expanded="true"]{border-color:var(--accent);color:var(--accent)}
 .qa-panel{display:none;position:absolute;right:0;top:calc(100% + 8px);width:min(440px,calc(100vw - 40px));background:var(--card);border:1px solid var(--rule);border-radius:3px;box-shadow:0 16px 40px rgba(0,0,0,.18);padding:16px;z-index:70}
@@ -223,6 +223,15 @@ td b{font-weight:600}
 .exam-opt label{display:block;font-size:12.5px;color:var(--ink-2);margin-bottom:5px}
 .exam-opt select{width:100%}
 .exam-total{font-family:var(--serif);font-size:15px;padding:12px 14px;background:var(--rule-2);border-radius:2px;margin-bottom:16px}
+.exam-src{display:grid;gap:8px;margin-bottom:14px}
+.exam-src-opt{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border:1px solid var(--rule);border-radius:2px;background:#fff;cursor:pointer;transition:border-color .16s,background .16s}
+.exam-src-opt:hover{border-color:var(--ink)}
+.exam-src-opt.on{border-color:var(--blue);background:var(--blue-wash)}
+.exam-src-opt input{margin:4px 0 0}
+.exam-src-opt b{display:block;font-size:14px;color:var(--ink)}
+.exam-src-opt .muted{display:block;font-size:12.5px;margin-top:2px}
+.exam-opt input[type="text"]{width:100%}
+#exam-gen-status{margin-top:14px}
 .exam-section{margin-bottom:30px}
 .exam-sec-head{display:flex;align-items:baseline;gap:10px;padding-bottom:7px;margin-bottom:16px;border-bottom:2px solid var(--ink)}
 .exam-sec-head .eh-num{font-family:var(--serif);font-style:italic;font-size:15px;color:var(--accent)}
@@ -497,6 +506,7 @@ td b{font-weight:600}
     <button class="tab" data-tab="settings">设置</button>
     <div class="qa-wrap">
       <button class="qa-trigger" id="qa-trigger" aria-expanded="false">＋ 快速加词</button>
+      <button class="qa-trigger" id="mq-trigger" aria-expanded="false">📖 快速加句</button>
       <div class="qa-panel" id="qa-panel">
         <div class="row" style="justify-content:space-between;align-items:baseline">
           <b style="font-size:13.5px">批量加入词库</b>
@@ -514,6 +524,23 @@ td b{font-weight:600}
           <button class="btn primary" id="qa-add">加入词库</button>
           <button class="btn" id="qa-close">关闭</button>
           <span class="ai-status" id="qa-status"></span>
+        </div>
+      </div>
+      <div class="qa-panel" id="mq-panel">
+        <div class="row" style="justify-content:space-between;align-items:baseline">
+          <b style="font-size:13.5px">加入背记册</b>
+          <span class="muted small" id="mq-count"></span>
+        </div>
+        <label class="muted small">句子（每行一句）</label>
+        <textarea id="mq-text" placeholder="She has been to Beijing twice.&#10;It is important to [protect] the environment. | 保护环境很重要&#10;My father used to take me to the park.&#10;&#10;想指定挖空的词就用 [单词] 括起来，不写则自动挖一个词；&#10;行末用 | 追加中文提示。已有 ___ 的句子按原样保留（需同时给出 [答案]）。"></textarea>
+        <label class="switch-inline" id="mq-ai-label" style="margin-top:10px">
+          <input type="checkbox" id="mq-ai">
+          <span>缺中文提示的句子用 AI 补全</span>
+        </label>
+        <div class="row" style="margin-top:12px">
+          <button class="btn primary" id="mq-add">加入背记册</button>
+          <button class="btn" id="mq-close">关闭</button>
+          <span class="ai-status" id="mq-status"></span>
         </div>
       </div>
     </div>
@@ -958,7 +985,7 @@ td b{font-weight:600}
             <button class="btn sm danger" id="mb-clear">清空背记册</button>
           </div>
         </div>
-        <p class="hint" style="margin:0 0 12px">练习时点「📖 加入背记册」收藏好句子；默写为<b>挖空默写</b>：句子中挖掉关键词，输入该词。</p>
+        <p class="hint" style="margin:0 0 12px">练习时点「📖 加入背记册」收藏好句子，或点右上角「📖 快速加句」一次粘贴多行；默写为<b>挖空默写</b>：句子中挖掉关键词，输入该词。</p>
         <div id="mb-list"></div>
       </div>
 
@@ -2558,7 +2585,7 @@ $('qa-lib').addEventListener('change', () => {
 function qaToggle(show) {
   const panel = $('qa-panel');
   const next = show == null ? !panel.classList.contains('show') : !!show;
-  if (next) qaRenderLibs();
+  if (next) { mqToggle(false); qaRenderLibs(); }
   panel.classList.toggle('show', next);
   $('qa-trigger').setAttribute('aria-expanded', String(next));
   if (next) setTimeout(() => $('qa-text').focus(), 30);
@@ -2566,12 +2593,14 @@ function qaToggle(show) {
 $('qa-trigger').addEventListener('click', e => { e.stopPropagation(); qaToggle(); });
 $('qa-close').addEventListener('click', () => qaToggle(false));
 document.addEventListener('click', e => {
-  if (!$('qa-panel').classList.contains('show')) return;
   if (e.target.closest('.qa-wrap')) return;
-  qaToggle(false);
+  if ($('qa-panel').classList.contains('show')) qaToggle(false);
+  if ($('mq-panel').classList.contains('show')) mqToggle(false);
 });
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && $('qa-panel').classList.contains('show')) qaToggle(false);
+  if (e.key !== 'Escape') return;
+  if ($('qa-panel').classList.contains('show')) qaToggle(false);
+  if ($('mq-panel').classList.contains('show')) mqToggle(false);
 });
 
 function qaParseLines(text) {
@@ -2661,6 +2690,119 @@ $('qa-add').addEventListener('click', async () => {
     status.className = 'ai-status ' + (added ? 'ok' : 'err');
     toast(added ? `已向「${lib.name}」加入 ${added} 个单词` : '没有新词加入', added ? 'ok' : 'err');
     if (added) $('qa-text').value = '';
+  } catch (err) {
+    status.textContent = '失败：' + err.message;
+    status.className = 'ai-status err';
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+/* =========================================================
+   快速加句小菜单（tab 栏呼出，直接添加句子到背记册）
+   ========================================================= */
+function mqRenderCount() {
+  const el = $('mq-count');
+  if (el) el.textContent = `已有 ${memBook.length} 句`;
+}
+
+function mqToggle(show) {
+  const panel = $('mq-panel');
+  const next = show == null ? !panel.classList.contains('show') : !!show;
+  if (next) { qaToggle(false); mqRenderCount(); }
+  panel.classList.toggle('show', next);
+  $('mq-trigger').setAttribute('aria-expanded', String(next));
+  if (next) setTimeout(() => $('mq-text').focus(), 30);
+}
+$('mq-trigger').addEventListener('click', e => { e.stopPropagation(); mqToggle(); });
+$('mq-close').addEventListener('click', () => mqToggle(false));
+
+/* 行格式：句子 [| 中文提示]，挖空用 [单词] 括起来，否则自动挖一个词 */
+function mqParseLines(text) {
+  const out = [];
+  String(text || '').split(/\n+/).forEach(raw => {
+    let line = raw.trim().replace(/^\d+[.、)\]]\s*/, '');
+    if (!line) return;
+    const parts = line.split(/\s*[|｜]\s*/);
+    const body = parts.shift().trim();
+    const note = parts.join(' · ').trim();
+    if (body) out.push({ raw: body, note });
+  });
+  return out;
+}
+
+function mqBuildEntry(item) {
+  let text = String(item.raw || '').trim();
+  if (!text) return null;
+  const answers = [];
+  if (/\[[^\]]+\]/.test(text)) {
+    text = text.replace(/\[([^\]]+)\]/g, (m, w) => { const a = String(w).trim(); if (a) answers.push(a); return '___'; });
+  } else if (!/_+/.test(text)) {
+    const a = autoMask(text, libWordSet());
+    if (a) { text = a.text; answers.push(...a.answers); }
+  }
+  const blanks = (text.match(/_+/g) || []).length;
+  if (!blanks || blanks !== answers.length) return null;
+  return {
+    text: text.replace(/\s+/g, ' ').trim(),
+    answers: answers.map(String),
+    note: String(item.note || '').trim(),
+    src: '快速加句'
+  };
+}
+
+function mqSolvedText(e) {
+  let i = 0;
+  return e.text.replace(/_+/g, () => (e.answers || [])[i++] ?? '___');
+}
+
+async function mqAIFill(entries) {
+  const need = entries.filter(e => !e.note);
+  if (!need.length) return entries;
+  const sys = '你是英语学习助手。为下列英文句子补一句简明中文提示（翻译或考点、搭配说明）。' +
+    '只返回 JSON 数组，不含任何解释。格式：[{"text":"原句","note":"中文提示"}]';
+  const user = need.map(mqSolvedText).join('\n');
+  const text = await callChat([
+    { role: 'system', content: sys },
+    { role: 'user', content: user }
+  ], { temperature: 0.4 });
+  const arr = extractJSON(text);
+  const map = new Map();
+  (Array.isArray(arr) ? arr : []).forEach(o => {
+    if (o && o.text) map.set(String(o.text).trim().toLowerCase(), String(o.note || '').trim());
+  });
+  return entries.map(e => e.note ? e : Object.assign({}, e, { note: map.get(mqSolvedText(e).toLowerCase()) || '' }));
+}
+
+$('mq-add').addEventListener('click', async () => {
+  const items = mqParseLines($('mq-text').value);
+  const btn = $('mq-add'), status = $('mq-status');
+  if (!items.length) { status.textContent = '请输入至少一个句子'; status.className = 'ai-status err'; return; }
+  btn.disabled = true;
+  status.className = 'ai-status';
+  let built = [];
+  let bad = 0;
+  items.forEach(it => { const e = mqBuildEntry(it); if (e) built.push(e); else bad++; });
+  if (!built.length) {
+    status.textContent = '没有可挖空的句子 —— 想指定挖哪个词，用 [单词] 括起来';
+    status.className = 'ai-status err';
+    btn.disabled = false;
+    return;
+  }
+  try {
+    if ($('mq-ai').checked && built.some(e => !e.note)) {
+      status.textContent = 'AI 生成中文提示中…';
+      built = await mqAIFill(built);
+    }
+    const added = addMemEntries(built, true);
+    const dup = built.length - added;
+    const parts = [`已加入 ${added} 句`];
+    if (bad) parts.push(`${bad} 行无法挖空已跳过`);
+    if (dup) parts.push(`${dup} 句已存在`);
+    status.textContent = parts.join(' · ');
+    status.className = 'ai-status ' + (added ? 'ok' : 'err');
+    toast(added ? `已加入背记册 ${added} 句` : (dup ? '这些句子都已在背记册中' : '没有新句子加入'), added ? 'ok' : (dup ? '' : 'err'));
+    if (added) { $('mq-text').value = ''; mqRenderCount(); }
   } catch (err) {
     status.textContent = '失败：' + err.message;
     status.className = 'ai-status err';
@@ -3817,7 +3959,7 @@ function addMemEntries(list, quiet) {
 function renderMemBook() {
   const el = $('mb-count'); if (el) el.textContent = memBook.length;
   const box = $('mb-list'); if (!box) return;
-  if (!memBook.length) { box.innerHTML = '<div class="empty-mini">背记册为空 —— 做题时点「📖 加入背记册」收藏好句子</div>'; return; }
+  if (!memBook.length) { box.innerHTML = '<div class="empty-mini">背记册为空 —— 点右上角「📖 快速加句」添加，或做题时点「📖 加入背记册」收藏</div>'; return; }
   const rows = memBook.slice().sort((a, b) => (b.addedAt || 0) - (a.addedAt || 0)).map(e => {
     const marked = esc(e.text).replace(/_+/g, '<span class="blank">_____</span>');
     return `<tr>
@@ -4199,8 +4341,31 @@ const EXAM_PLAN = [
 ];
 const TYPE_LABEL = { choice: '单项选择', reading: '阅读理解', cloze: '综合填空', verb: '动词填空', listening: '听力题', writing: '作文' };
 
+/* AI 全新出卷的板块计划（jobs 逐个调用 AI，合并进同一板块） */
+const EXAM_AI_PLAN = [
+  { type: 'listening', label: '听力理解', jobs: [{ count: 1, sub: 'short_dialogue' }, { count: 1, sub: 'long_dialogue' }] },
+  { type: 'choice', label: '单项选择', jobs: [{ count: 10 }] },
+  { type: 'reading', label: '阅读理解', jobs: [{ count: 2, extra: '- 请生成 2 篇完整的阅读理解：JSON 数组长度必须为 2，每篇含 3-5 个小题。\n' }] },
+  { type: 'cloze', label: '综合填空', jobs: [{ count: 1 }] },
+  { type: 'verb', label: '动词填空', jobs: [{ count: 1 }] },
+  { type: 'writing', label: '书面表达', jobs: [{ count: 1 }] }
+];
+
+function examAIPlan() {
+  const typeF = $('bank-filter-type').value;
+  return typeF === 'all' ? EXAM_AI_PLAN : EXAM_AI_PLAN.filter(s => s.type === typeF);
+}
+
+function aiPlanTarget(spec) {
+  const unit = { listening: '组', choice: '道', reading: '篇', cloze: '篇', verb: '篇', writing: '篇' }[spec.type] || '道';
+  const n = spec.jobs.reduce((a, j) => a + (parseInt(j.count, 10) || 0), 0);
+  const subs = spec.type === 'listening' ? '（' + spec.jobs.map(j => ({ short_dialogue: '短对话', long_dialogue: '长对话', table: '填表' }[j.sub] || '听力')).join(' + ') + '）' : '';
+  return `AI 生成 ${n} ${unit}${subs}`;
+}
+
 const exam = {
   active: false, graded: false, paper: [], sections: [],
+  source: 'bank', ai: { difficulty: 3, topic: '' }, generating: false, bankEmpty: false,
   timeLimit: 60, maxPlays: 2, remaining: 0, timer: null, startedAt: 0,
   listenState: {}, stats: null
 };
@@ -4235,18 +4400,28 @@ function buildExamSections() {
   return sections;
 }
 
-function openExam() {
+/* 按题库筛选条件组卷；返回是否有题可组 */
+function prepareBankPaper() {
   const sections = buildExamSections();
-  if (!sections.length) { toast('当前筛选条件下没有可组卷的题目', 'err'); return; }
-  stopListening();
-  if (exam.timer) { clearInterval(exam.timer); exam.timer = null; }
   exam.sections = sections;
   exam.paper = [];
   sections.forEach(s => s.list.forEach(q => exam.paper.push({ q, id: uid(), section: s, el: null })));
+  exam.bankEmpty = !sections.length;
+  return !exam.bankEmpty;
+}
+
+function openExam() {
+  stopListening();
+  if (exam.timer) { clearInterval(exam.timer); exam.timer = null; }
   exam.active = false;
   exam.graded = false;
+  exam.generating = false;
   exam.stats = null;
   exam.listenState = {};
+  exam.sections = [];
+  exam.paper = [];
+  exam.bankEmpty = false;
+  if (exam.source === 'bank') prepareBankPaper();
   $('tabs').querySelector('[data-tab="bank"]').click();
   $('bank-practice').style.display = 'none';
   $('bank-list-card').style.display = 'none';
@@ -4264,19 +4439,64 @@ function openExam() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
+function examSourceOptionsHtml() {
+  const bankNote = exam.bankEmpty
+    ? '<span class="muted">当前筛选条件下没有可组卷的题目</span>'
+    : `<span class="muted">按当前筛选条件抽取 · ${exam.paper.length} 题可选</span>`;
+  return `
+    <div class="exam-src">
+      <label class="exam-src-opt${exam.source === 'bank' ? ' on' : ''}">
+        <input type="radio" name="exam-source" value="bank"${exam.source === 'bank' ? ' checked' : ''}>
+        <span><b>从题库组卷</b>${bankNote}</span>
+      </label>
+      <label class="exam-src-opt${exam.source === 'ai' ? ' on' : ''}">
+        <input type="radio" name="exam-source" value="ai"${exam.source === 'ai' ? ' checked' : ''}>
+        <span><b>AI 全新出卷</b><span class="muted">现场生成一套新题，不写入题库 · 需已配置 API</span></span>
+      </label>
+    </div>`;
+}
+
+function examAIOptionsHtml() {
+  const d = exam.ai.difficulty;
+  const opts = [1, 2, 3, 4, 5].map(n => `<option value="${n}"${n === d ? ' selected' : ''}>${'★'.repeat(n)}${'☆'.repeat(5 - n)} ${n} 星</option>`).join('');
+  return `
+    <div class="exam-opt">
+      <label>AI 命题难度</label>
+      <select id="exam-ai-diff">${opts}</select>
+    </div>
+    <div class="exam-opt">
+      <label>命题主题（可选）</label>
+      <input type="text" id="exam-ai-topic" placeholder="如：校园生活、旅行、环保" value="${esc(exam.ai.topic)}">
+    </div>
+    <p class="muted small" style="margin:0 0 14px">难度/标记筛选对 AI 出卷不生效；生成的题目不会自动加入题库，交卷后可一键保存。</p>`;
+}
+
 function renderExamSetup() {
+  const isAI = exam.source === 'ai';
   const totalQ = exam.paper.length;
   const totalSub = exam.paper.reduce((n, r) => n + examSubCount(r.q), 0);
-  const secHtml = exam.sections.map(s => {
-    const subs = s.list.reduce((n, q) => n + examSubCount(q), 0);
-    return `<li><b>${esc(s.label)}</b><span class="muted">${s.list.length} 题 · ${subs} 小题</span></li>`;
-  }).join('');
-  $('exam-sub').textContent = `按题库筛选条件自动组卷 · 共 ${totalQ} 题`;
+  const secHtml = isAI
+    ? examAIPlan().map(s => `<li><b>${esc(s.label)}</b><span class="muted">${esc(aiPlanTarget(s))}</span></li>`).join('')
+    : exam.sections.map(s => {
+        const subs = s.list.reduce((n, q) => n + examSubCount(q), 0);
+        return `<li><b>${esc(s.label)}</b><span class="muted">${s.list.length} 题 · ${subs} 小题</span></li>`;
+      }).join('');
+  const headLine = isAI
+    ? 'AI 将现场命题，组成一套<b>全新</b>试卷'
+    : exam.bankEmpty
+      ? '<b>没有可组卷的题目</b>：请调整题库筛选条件，或改用 AI 全新出卷'
+      : `本卷共 <b>${totalQ}</b> 题、<b>${totalSub}</b> 个计分小题${totalSub ? '' : '（作文交卷后由 AI 批改）'}`;
+  $('exam-sub').textContent = isAI
+    ? 'AI 全新出卷 · 不写入题库'
+    : `按题库筛选条件自动组卷 · 共 ${totalQ} 题`;
+  const canStart = isAI || !exam.bankEmpty;
   $('exam-setup').innerHTML = `
     <div class="exam-setup-grid">
       <div>
-        <div class="exam-total">本卷共 <b>${totalQ}</b> 题、<b>${totalSub}</b> 个计分小题${totalSub ? '' : '（作文交卷后由 AI 批改）'}</div>
+        ${examSourceOptionsHtml()}
+        <div class="exam-total">${headLine}</div>
         <ul class="exam-sec-list">${secHtml}</ul>
+        ${isAI ? examAIOptionsHtml() : ''}
       </div>
       <div>
         <div class="exam-opt">
@@ -4298,12 +4518,13 @@ function renderExamSetup() {
           </select>
         </div>
         <div class="row" style="margin-top:18px">
-          <button class="btn primary" id="exam-begin">开始考试</button>
+          <button class="btn primary" id="exam-begin"${canStart ? '' : ' disabled'}>开始考试</button>
           <button class="btn" id="exam-cancel">取消</button>
         </div>
         <p class="muted small" style="margin-top:14px">考试期间不即时判分，交卷后统一给出答案与解析；听力原文与作文 AI 批改在交卷后可用。</p>
       </div>
-    </div>`;
+    </div>
+    <div id="exam-gen-status" class="ai-status" style="display:none"></div>`;
 }
 
 function renderExamQuestion(q) {
@@ -4359,9 +4580,72 @@ function bindExamPaper() {
   });
 }
 
-function beginExam() {
+/* AI 全新出卷：按计划逐板块调用 AI，返回题目分组 */
+async function generateExamSections() {
+  if (!settings || !settings.endpoint || !settings.key || !settings.model) {
+    toast('请先在「设置」中配置 API', 'err');
+    $('tabs').querySelector('[data-tab="settings"]').click();
+    return [];
+  }
+  const plan = examAIPlan();
+  const status = $('exam-gen-status');
+  const btn = $('exam-begin');
+  const setNote = (text, cls) => {
+    if (!status) return;
+    status.style.display = 'block';
+    status.className = 'ai-status' + (cls ? ' ' + cls : '');
+    status.textContent = text;
+  };
+  exam.generating = true;
+  if (btn) { btn.disabled = true; btn.textContent = 'AI 出卷中…'; }
+  const sections = [];
+  const errors = [];
+  try {
+    for (let i = 0; i < plan.length; i++) {
+      const spec = plan[i];
+      setNote(`正在生成：${spec.label}（${i + 1}/${plan.length}）…`);
+      const list = [];
+      for (const job of spec.jobs) {
+        try {
+          const got = await generateQuestions(spec.type, {
+            topic: exam.ai.topic, difficulty: exam.ai.difficulty,
+            count: job.count, level: job.level || 'A',
+            listeningSub: job.sub, extra: job.extra || ''
+          });
+          list.push(...got);
+        } catch (err) {
+          errors.push(`${spec.label}：${err.message}`);
+        }
+      }
+      if (list.length) sections.push({ type: spec.type, label: spec.label, list });
+    }
+  } finally {
+    exam.generating = false;
+    if (btn) { btn.disabled = false; btn.textContent = '开始考试'; }
+  }
+  if (errors.length) {
+    setNote(`部分板块生成失败 —— ${errors.join('；')}`, 'err');
+    if (!sections.length) { toast('AI 出卷失败，请检查 API 配置后重试', 'err'); return []; }
+    toast(`有 ${errors.length} 个板块生成失败，已用其余板块组卷`, 'err');
+  } else {
+    setNote(`生成完成：${sections.reduce((n, s) => n + s.list.length, 0)} 道题`, 'ok');
+  }
+  return sections;
+}
+
+async function beginExam() {
+  if (exam.generating) return;
   const mins = parseInt($('exam-mins').value, 10) || 60;
   const playsRaw = parseInt($('exam-plays').value, 10);
+  if (exam.source === 'ai') {
+    const sections = await generateExamSections();
+    if (!sections.length) return;
+    exam.sections = sections;
+    exam.paper = [];
+    sections.forEach(s => s.list.forEach(q => exam.paper.push({ q, id: uid(), section: s, el: null })));
+  } else {
+    if (exam.bankEmpty || !exam.paper.length) { toast('没有可组卷的题目，请调整筛选条件或改用 AI 出卷', 'err'); return; }
+  }
   exam.timeLimit = mins;
   exam.maxPlays = isNaN(playsRaw) ? 2 : playsRaw;
   exam.active = true;
@@ -4376,7 +4660,7 @@ function beginExam() {
   updateExamTimer();
   if (exam.timer) clearInterval(exam.timer);
   exam.timer = setInterval(examTick, 1000);
-  toast(`考试开始 · 时长 ${mins} 分钟`, 'ok');
+  toast(`考试开始 · ${exam.source === 'ai' ? 'AI 全新出卷' : '题库组卷'} · 时长 ${mins} 分钟`, 'ok');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -4679,13 +4963,20 @@ function renderExamReport() {
       <span class="muted small">${txt ? `作文已写 <b>${words}</b> 词，交卷后可提交 AI 批改` : '作文未填写'}</span>
     </div>`;
   }
+  const saveHtml = exam.source === 'ai'
+    ? `<div class="row" style="margin-top:10px">
+        <button class="btn sm" id="exam-save-bank">📥 本卷题目加入题库</button>
+        <span class="muted small">AI 生成的题目默认不入库，点此保存以便日后重做</span>
+      </div>`
+    : '';
   const el = $('exam-report');
   el.innerHTML = `
     <div class="exam-report-top">
       <div>
         <div class="exam-score">${st.total ? st.right + '<small> / ' + st.total + ' 小题</small>' : '作文卷'}</div>
         <div class="muted small" style="margin-top:6px">
-          ${pct == null ? '本卷无客观计分题' : '正确率 ' + pct + '%（错 ' + wrongCount + ' 小题）'}
+          ${exam.source === 'ai' ? 'AI 全新出卷' : '题库组卷'}
+          · ${pct == null ? '本卷无客观计分题' : '正确率 ' + pct + '%（错 ' + wrongCount + ' 小题）'}
           · 用时 ${examTimerText(st.used)}${exam.remaining <= 0 ? ' · 时间到自动交卷' : ''}
           · 已作答 ${answered.done}/${answered.total} 处
         </div>
@@ -4703,6 +4994,7 @@ function renderExamReport() {
       ? `<p class="small muted">做错的 ${wrongCount} 个小题${autoW ? '已自动加入错题本' : '未加入错题本（设置中已关闭自动加错题）'}。</p>`
       : '<p class="small muted">客观题全部正确 🎉</p>'}
     ${essayHtml}
+    ${saveHtml}
     <div id="exam-wrong-note"></div>`;
   el.style.display = 'block';
   $('exam-paper').style.display = 'block';
@@ -4744,7 +5036,39 @@ $('bank-exam').addEventListener('click', e => {
     }
     return;
   }
+  if (t.closest('#exam-save-bank')) return saveExamPaperToBank();
 });
+
+/* 试卷来源切换 / AI 命题参数 */
+$('bank-exam').addEventListener('change', e => {
+  const t = e.target;
+  if (exam.generating) return;
+  if (t.name === 'exam-source') {
+    exam.source = t.value === 'ai' ? 'ai' : 'bank';
+    if (exam.source === 'bank') prepareBankPaper();
+    renderExamSetup();
+    return;
+  }
+  if (t.id === 'exam-ai-diff') exam.ai.difficulty = clamp(parseInt(t.value) || 3, 1, 5);
+  if (t.id === 'exam-ai-topic') exam.ai.topic = t.value.trim();
+});
+
+function saveExamPaperToBank() {
+  if (exam.source !== 'ai') return;
+  let added = 0;
+  exam.paper.forEach(rec => {
+    const q = rec.q;
+    if (!q || !q.id) return;
+    if (bank.some(b => b && b.id === q.id)) return;
+    bank.push(q);
+    added++;
+  });
+  saveBank();
+  renderBankList();
+  const btn = document.getElementById('exam-save-bank');
+  if (btn && added) { btn.disabled = true; btn.textContent = '📥 已保存到题库'; }
+  toast(added ? `已加入题库：${added} 道新题` : '本卷题目已在题库中', added ? 'ok' : 'err');
+}
 
 $('exam-paper').addEventListener('click', e => {
   if (!exam.graded) {
@@ -5831,6 +6155,31 @@ ${extra}${vocab}${rules}
   return { sys, user };
 }
 
+/* 生成一类题目：返回规范化后的题目数组（AI 出题页与整卷模考共用） */
+async function generateQuestions(type, opts) {
+  opts = opts || {};
+  const difficulty = clamp(parseInt(opts.difficulty) || 3, 1, 5);
+  const count = clamp(parseInt(opts.count) || 3, 1, 15);
+  const { sys, user: baseUser } = buildPromptForType(type, opts.topic, difficulty, count, opts.level, opts.listeningSub);
+  const user = baseUser + (opts.extra ? String(opts.extra) : '');
+  const text = await callChat([{ role: 'system', content: sys }, { role: 'user', content: user }], { temperature: settings.temperature });
+  let parsed = extractJSON(text);
+  if (!Array.isArray(parsed)) {
+    if (parsed && Array.isArray(parsed.questions)) parsed = parsed.questions;
+    else if (parsed && typeof parsed === 'object') parsed = [parsed];
+  }
+  if (!Array.isArray(parsed)) throw new Error('返回不是数组');
+  const list = parsed.map(item => {
+    if (item && !item.type) item.type = type;
+    if (item && item.difficulty == null) item.difficulty = difficulty;
+    if (type === 'listening' && item && !item.subType) item.subType = opts.listeningSub;
+    return normalizeQuestion(item);
+  }).filter(Boolean);
+  if (!list.length) throw new Error('AI 返回的题目无法解析，请检查提示词或换模型重试');
+  spreadAnswerLetters(list);
+  return list;
+}
+
 $('ai-gen').addEventListener('click', async () => {
   const type = $('ai-type').value;
   const topic = $('ai-topic').value.trim();
@@ -5855,22 +6204,7 @@ $('ai-gen').addEventListener('click', async () => {
   aiShowAnswers = false;
 
   try {
-    const { sys, user } = buildPromptForType(type, topic, difficulty, count, level, listeningSub);
-    const text = await callChat([{ role: 'system', content: sys }, { role: 'user', content: user }], { temperature: settings.temperature });
-    let parsed = extractJSON(text);
-    if (!Array.isArray(parsed)) {
-      if (parsed && Array.isArray(parsed.questions)) parsed = parsed.questions;
-      else if (parsed && typeof parsed === 'object') parsed = [parsed];
-    }
-    if (!Array.isArray(parsed)) throw new Error('返回不是数组');
-    const list = parsed.map(item => {
-      if (item && !item.type) item.type = type;
-      if (item && item.difficulty == null) item.difficulty = difficulty;
-      if (type === 'listening' && item && !item.subType) item.subType = listeningSub;
-      return normalizeQuestion(item);
-    }).filter(Boolean);
-    if (!list.length) throw new Error('AI 返回的题目无法解析，请检查提示词或换模型重试');
-    spreadAnswerLetters(list);
+    const list = await generateQuestions(type, { topic, difficulty, count, level, listeningSub });
 
     aiGenerated = list;
     renderAIQuestions(list);
