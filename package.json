@@ -5,9 +5,11 @@
   "scripts": {
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs && node -e \"const f=require('node:fs');f.cpSync('resource','docs/.vitepress/dist/resource',{recursive:true});['psych.html','cert.html','tools.html','project.html'].forEach(p=>f.copyFileSync(p,'docs/.vitepress/dist/'+p))\"",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "test:exam": "node smoke-exam.js"
   },
   "devDependencies": {
+    "jsdom": "^30.1.1",
     "vitepress": "^1.5.0"
   }
 }
