@@ -14,7 +14,9 @@ export default defineConfig({
       { text: '首页', link: '/' },
       { text: '指南', link: '/guide/getting-started' },
       { text: '规则', link: '/rules' },
-      { text: 'FAQ', link: '/faq' }
+      { text: 'FAQ', link: '/faq' },
+      { text: '功能合集', link: '/tools.html' },
+      { text: '经典版', link: '/site/index.html' }
     ],
 
     sidebar: {

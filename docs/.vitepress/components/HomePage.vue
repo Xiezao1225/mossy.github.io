@@ -697,11 +697,11 @@ function triggerFim() {
   }
   fadeIn()
 
-  // fim.png 覆盖层：先插入 DOM，下一帧再加 .show 触发动画
+  // fim.webp 覆盖层：先插入 DOM，下一帧再加 .show 触发动画
   const overlay = document.createElement('div')
   overlay.className = 'fim-overlay'
   const img = document.createElement('img')
-  img.src = `${baseUrl}resource/fim.png`
+  img.src = `${baseUrl}resource/fim.webp`
   img.alt = ''
   overlay.appendChild(img)
   document.body.appendChild(overlay)
