@@ -341,6 +341,22 @@ async function run() {
   check('切换到 AI 出卷', ev('exam.source') === 'ai');
   check('AI 板块预览', /AI 生成/.test($('exam-setup').textContent), $('exam-setup').textContent.replace(/\s+/g, ' ').slice(0, 160));
   check('AI 选项可见', !!$('exam-ai-diff') && !!$('exam-ai-topic'));
+  const poolInfo = () => w.document.getElementById('exam-pool-info');
+  const examPrompt = () => ev(`buildPromptForType('reading','t',3,1,'A',null,'exam').user`);
+  check('模考词库选择器存在', !!w.document.getElementById('exam-lib-picker') && w.document.getElementById('exam-lib-picker').children.length > 0,
+    w.document.getElementById('exam-lib-picker') ? w.document.getElementById('exam-lib-picker').children.length : 'no box');
+  check('默认选中当前词库', /已选 1 个词库/.test(poolInfo().textContent), poolInfo().textContent);
+  w.document.getElementById('exam-sel-all').click();
+  const libCount = ev('libraries.length');
+  const wordCount = ev('libraries.reduce((n,l)=>n+l.words.length,0)');
+  check('全选 ' + libCount + ' 个词库', poolInfo().textContent === `已选 ${libCount} 个词库 · 共 ${wordCount} 词`, poolInfo().textContent);
+  check('所选词库写入命题提示词', /词汇来源：已选/.test(examPrompt()), examPrompt().split('\n')[0]);
+  w.document.getElementById('exam-sel-none').click();
+  check('清空后不再写入词库', !/词汇来源/.test(examPrompt()), examPrompt().split('\n')[0]);
+  check('清空后池信息归零', /已选 0 个词库/.test(poolInfo().textContent), poolInfo().textContent);
+  check('「仅使用所选词库词汇」开关存在', !!w.document.getElementById('exam-lib-only') && !!w.document.getElementById('exam-key-only'));
+  w.document.getElementById('exam-sel-all').click();
+  check('重新全选 ' + libCount + ' 个词库', /已选 11 个词库/.test(poolInfo().textContent), poolInfo().textContent);
   check('开始按钮可用', $('exam-begin').disabled === false);
   $('exam-begin').click();
   for (let i = 0; i < 300 && !ev('exam.active'); i++) await new Promise(r => setTimeout(r, 10));
@@ -348,6 +364,7 @@ async function run() {
   check('AI 调用 9 次（9 个板块）', w.__aiCalls.length === 9, w.__aiCalls.length);
   check('9 个板块', ev('exam.sections.length') === 9, ev('exam.sections.map(s=>s.label).join(",")'));
   check('生成 9 道题', ev('exam.paper.length') === 9, ev('exam.paper.length'));
+  check('实际命题提示词含所选词库', /词汇来源：已选/.test(w.__aiCalls.join('\n')), w.__aiCalls[0].split('\n').slice(0, 3).join(' | '));
   check('AI 卷满分 120 分', ev('exam.sections.reduce((n,s)=>n+(s.points>0?s.points:0),0)') === 120, ev('exam.sections.reduce((n,s)=>n+(s.points>0?s.points:0),0)'));
   check('AI 题目未入题库', ev('bank.length') === bankBefore, ev('bank.length'));
   const aiQs = JSON.parse(ev('JSON.stringify(exam.paper.map(r=>r.q))'));

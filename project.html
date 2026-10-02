@@ -2106,8 +2106,8 @@ let listenSel = new Set();
 let dictSel = new Set();
 let aiSel = new Set();
 
-/* 词库多选器（听力 l / 默写 d / 出题 ai 共用） */
-const PICKER_PREFIXES = ['l', 'd', 'ai'];
+/* 词库多选器（听力 l / 默写 d / 出题 ai / 模考 exam 共用；exam 与 ai 共享同一选择） */
+const PICKER_PREFIXES = ['l', 'd', 'ai', 'exam'];
 function pickerSelSet(prefix) {
   if (prefix === 'l') return listenSel;
   if (prefix === 'd') return dictSel;
@@ -2304,6 +2304,29 @@ PICKER_PREFIXES.forEach(prefix => {
     updatePoolInfo(prefix);
     resetPoolUI(prefix);
   });
+});
+
+/* 模考「AI 全新出卷」页的词库选择器随组卷面板动态渲染，改用事件委托绑定 */
+$('bank-exam').addEventListener('change', e => {
+  const label = e.target.closest('[data-lib-pick="exam"]');
+  if (label) {
+    const id = label.dataset.id;
+    if (e.target.checked) aiSel.add(id);
+    else aiSel.delete(id);
+    renderLibPickers();
+    return;
+  }
+  if (e.target.id === 'exam-key-only' || e.target.id === 'exam-lib-only') updatePoolInfo('exam');
+});
+$('bank-exam').addEventListener('click', e => {
+  if (e.target.closest('#exam-sel-all')) {
+    aiSel.clear();
+    libraries.forEach(l => aiSel.add(l.id));
+    renderLibPickers();
+  } else if (e.target.closest('#exam-sel-none')) {
+    aiSel.clear();
+    renderLibPickers();
+  }
 });
 
 $('lib-grade').addEventListener('input', e => {
@@ -4669,6 +4692,27 @@ function examAIOptionsHtml() {
     <p class="muted small" style="margin:0 0 14px">难度/标记筛选对 AI 出卷不生效；生成的题目不会自动加入题库，交卷后可一键保存。</p>`;
 }
 
+/* AI 出卷的词汇来源：可多选一个/多个词库，与「AI 出题」页共用同一选择 */
+function examVocabHtml() {
+  return `
+    <div class="exam-vocab">
+      <div class="row between" style="margin:20px 0 10px;flex-wrap:wrap">
+        <b style="font-family:var(--serif);font-size:14.5px;font-weight:600">词汇来源（可多选词库）</b>
+        <div class="row">
+          <button class="btn sm" type="button" id="exam-sel-all">全选</button>
+          <button class="btn sm" type="button" id="exam-sel-none">清空</button>
+        </div>
+      </div>
+      <div class="lib-picker" id="exam-lib-picker"></div>
+      <div class="row" style="margin-top:10px;flex-wrap:wrap;gap:14px;align-items:center">
+        <label class="switch" style="margin:0"><input type="checkbox" id="exam-key-only">只取重点词汇</label>
+        <label class="switch" style="margin:0"><input type="checkbox" id="exam-lib-only">仅使用所选词库词汇</label>
+        <span class="muted small" id="exam-pool-info"></span>
+      </div>
+      <p class="muted small" style="margin:8px 0 0">所选词库的单词与释义会写入命题提示词；勾选「仅使用所选词库词汇」时 AI 只用这些词命题。不勾选任何词库则按主题自由出题，选择结果与「AI 出题」页共用。</p>
+    </div>`;
+}
+
 function renderExamSetup() {
   const isAI = exam.source === 'ai';
   const totalQ = exam.paper.length;
@@ -4717,7 +4761,7 @@ function renderExamSetup() {
         ${examSourceOptionsHtml()}
         <div class="exam-total">${headLine}</div>
         <ul class="exam-sec-list">${secHtml}</ul>
-        ${isAI ? examAIOptionsHtml() : ''}
+        ${isAI ? examAIOptionsHtml() + examVocabHtml() : ''}
       </div>
       <div>
         <div class="exam-opt">
@@ -4746,6 +4790,7 @@ function renderExamSetup() {
       </div>
     </div>
     <div id="exam-gen-status" class="ai-status" style="display:none"></div>`;
+  renderLibPickers();
 }
 
 function renderExamQuestion(q) {
@@ -4847,7 +4892,8 @@ async function generateExamSections() {
           const got = await generateQuestions(g.kind, {
             topic: exam.ai.topic, difficulty: exam.ai.difficulty,
             count: job.count, level: job.level || 'A',
-            listeningSub: job.sub, extra: job.extra || ''
+            listeningSub: job.sub, extra: job.extra || '',
+            vocabPrefix: 'exam'
           });
           list.push(...got);
         } catch (err) {
@@ -6539,24 +6585,26 @@ $('ai-type').addEventListener('change', e => {
 /* ---- 出题：所选词库（可多选）词汇收集 ---- */
 const AI_VOCAB_LIMIT = 200;
 
-function getAIVocabSelection() {
-  const keyOnly = pickerKeyOnly('ai');
+function getAIVocabSelection(prefix) {
+  prefix = prefix || 'ai';
+  const keyOnly = pickerKeyOnly(prefix);
   const words = [];
   const libNames = [];
+  const selSet = pickerSelSet(prefix);
   libraries.forEach(lib => {
-    if (!aiSel.has(lib.id)) return;
+    if (!selSet.has(lib.id)) return;
     libNames.push(lib.name);
     lib.words.forEach(w => {
       if (keyOnly && !w.isKey && !lib.isKey) return;
       words.push(w);
     });
   });
-  const onlyBox = $('ai-lib-only');
+  const onlyBox = $(prefix + '-lib-only');
   return { words, libNames, strict: !!(onlyBox && onlyBox.checked) };
 }
 
-function buildVocabBlock() {
-  const { words, libNames, strict } = getAIVocabSelection();
+function buildVocabBlock(prefix) {
+  const { words, libNames, strict } = getAIVocabSelection(prefix);
   if (!words.length) return '';
   const shown = words.slice(0, AI_VOCAB_LIMIT);
   const list = shown.map(w => `${w.word}${w.meaning ? `（${w.meaning}）` : ''}`).join('；');
@@ -6604,7 +6652,7 @@ function buildFieldRules(type) {
   return out;
 }
 
-function buildPromptForType(type, topic, difficulty, count, level, listeningSub) {
+function buildPromptForType(type, topic, difficulty, count, level, listeningSub, vocabPrefix) {
   const sys = settings.prompts[type];
   const typeMap = {
     choice:'单项选择', reading:'阅读理解', cloze:'完形填空', verb:'动词填空', listening:'听力题', writing:'作文',
@@ -6621,7 +6669,7 @@ function buildPromptForType(type, topic, difficulty, count, level, listeningSub)
     const subMap = { short_dialogue:'short_dialogue（短对话问答，5组）', long_dialogue:'long_dialogue（长对话理解，3-5小题）', table:'table（听力填表）' };
     extra = `- 听力子题型：${subMap[listeningSub] || 'short_dialogue'}\n`;
   }
-  const vocab = buildVocabBlock();
+  const vocab = buildVocabBlock(vocabPrefix);
   const rules = buildFieldRules(type);
   const user = `要求：
 - 题型：${typeMap[type] || type}
@@ -6638,7 +6686,7 @@ async function generateQuestions(type, opts) {
   opts = opts || {};
   const difficulty = clamp(parseInt(opts.difficulty) || 3, 1, 5);
   const count = clamp(parseInt(opts.count) || 3, 1, 15);
-  const { sys, user: baseUser } = buildPromptForType(type, opts.topic, difficulty, count, opts.level, opts.listeningSub);
+  const { sys, user: baseUser } = buildPromptForType(type, opts.topic, difficulty, count, opts.level, opts.listeningSub, opts.vocabPrefix);
   const user = baseUser + (opts.extra ? String(opts.extra) : '');
   const text = await callChat([{ role: 'system', content: sys }, { role: 'user', content: user }], { temperature: settings.temperature });
   let parsed = extractJSON(text);
