@@ -205,6 +205,39 @@ td b{font-weight:600}
 .q-meta .tag.olive{background:var(--olive-wash);color:var(--olive)}
 .q-meta .tag.gold{background:var(--gold-wash);color:var(--gold)}
 
+/* ---- 整卷模考 ---- */
+.exam-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;padding-bottom:14px;margin-bottom:16px;border-bottom:2px solid var(--ink)}
+.exam-head h2{margin:0}
+.exam-head-side{display:flex;align-items:center;gap:14px}
+.exam-timer{font-family:var(--serif);font-size:27px;font-weight:700;letter-spacing:.05em;line-height:1}
+.exam-timer.warn{color:var(--gold)}
+.exam-timer.over{color:var(--accent);animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.35}}
+.exam-setup-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:22px}
+@media(max-width:680px){.exam-setup-grid{grid-template-columns:1fr}}
+.exam-sec-list{margin:0;padding:0;list-style:none;border-top:1px solid var(--rule)}
+.exam-sec-list li{display:flex;justify-content:space-between;gap:12px;align-items:baseline;padding:9px 2px;border-bottom:1px solid var(--rule-2);font-size:14px}
+.exam-sec-list li b{font-family:var(--serif);font-weight:600}
+.exam-sec-list li .muted{font-size:12.5px}
+.exam-opt{margin-bottom:14px}
+.exam-opt label{display:block;font-size:12.5px;color:var(--ink-2);margin-bottom:5px}
+.exam-opt select{width:100%}
+.exam-total{font-family:var(--serif);font-size:15px;padding:12px 14px;background:var(--rule-2);border-radius:2px;margin-bottom:16px}
+.exam-section{margin-bottom:30px}
+.exam-sec-head{display:flex;align-items:baseline;gap:10px;padding-bottom:7px;margin-bottom:16px;border-bottom:2px solid var(--ink)}
+.exam-sec-head .eh-num{font-family:var(--serif);font-style:italic;font-size:15px;color:var(--accent)}
+.exam-sec-head .eh-title{font-family:var(--serif);font-size:18px;font-weight:600}
+.exam-sec-head .eh-note{margin-left:auto;font-size:12px;letter-spacing:.06em;color:var(--ink-3)}
+.exam-q{margin-bottom:16px}
+.q-option.chosen,.blank-opt.chosen{border-color:var(--blue)!important;background:var(--blue-wash)!important;color:var(--blue)!important;font-weight:600}
+.exam-report-top{display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between;padding:16px 18px;background:var(--blue-wash);border:1px solid var(--rule);border-radius:3px;margin-bottom:16px}
+.exam-score{font-family:var(--serif);font-size:34px;font-weight:700;line-height:1}
+.exam-score small{font-size:15px;font-weight:400;color:var(--ink-3)}
+.exam-sec-table{width:100%;border-collapse:collapse;font-size:13.5px;margin-bottom:14px}
+.exam-sec-table th,.exam-sec-table td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule-2)}
+.exam-sec-table th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.exam-sec-table td:last-child,.exam-sec-table th:last-child{text-align:right}
+
 .q-text{font-size:16px;line-height:1.7;color:var(--ink);margin:0 0 18px}
 
 .passage{font-family:var(--serif);font-size:15.5px;line-height:1.9;color:var(--ink-2);background:#fff;border-left:3px solid var(--rule);padding:16px 20px;border-radius:2px;margin-bottom:18px;white-space:pre-wrap}
@@ -718,6 +751,7 @@ td b{font-weight:600}
           <input type="search" id="bank-search" placeholder="搜索关键词">
           <button class="btn primary" id="bank-start">开始练习</button>
           <button class="btn" id="bank-shuffle">随机排序</button>
+          <button class="btn" id="bank-exam-start">📝 整卷模考</button>
         </div>
 
         <div id="bank-import-area" style="display:none;margin-top:16px">
@@ -767,6 +801,25 @@ td b{font-weight:600}
           <button class="btn" id="bank-mem-btn">📖 加入背记册</button>
           <button class="btn danger" id="bank-exit">退出练习</button>
         </div>
+      </div>
+
+      <div class="card" id="bank-exam" style="display:none">
+        <div class="exam-head">
+          <div>
+            <h2 class="no-num" style="margin:0">📝 整卷模考</h2>
+            <div class="muted small" id="exam-sub">按题库筛选条件自动组卷</div>
+          </div>
+          <div class="exam-head-side">
+            <div class="exam-timer" id="exam-timer">--:--</div>
+            <div class="row">
+              <button class="btn sm" id="exam-exit">退出</button>
+              <button class="btn primary" id="exam-submit">交卷</button>
+            </div>
+          </div>
+        </div>
+        <div id="exam-setup"></div>
+        <div id="exam-report" style="display:none"></div>
+        <div id="exam-paper" style="display:none"></div>
       </div>
 
       <div class="card" id="bank-list-card">
@@ -3948,7 +4001,7 @@ Object.defineProperty(practice, 'answered', {
   }
 });
 
-function startPractice() {
+function filterBankList() {
   const typeF = $('bank-filter-type').value;
   const diffF = $('bank-filter-diff').value;
   const flagF = $('bank-filter-flag').value;
@@ -3959,6 +4012,10 @@ function startPractice() {
   if (flagF === 'flagged') list = list.filter(q => q.flagged);
   else if (flagF === 'unflagged') list = list.filter(q => !q.flagged);
   if (kw) list = list.filter(q => JSON.stringify(q).toLowerCase().includes(kw));
+  return list;
+}
+function startPractice() {
+  const list = filterBankList();
   if (!list.length) { toast('没有符合条件的题目', 'err'); return; }
   startPracticeFrom(list, 'bank');
 }
@@ -3972,6 +4029,7 @@ function startPracticeFrom(list, mode) {
   practice.mode = mode || 'bank';
   practice.state = {};
   $('tabs').querySelector('[data-tab="bank"]').click();
+  $('bank-exam').style.display = 'none';
   $('bank-practice').style.display = 'block';
   $('bank-list-card').style.display = 'none';
   renderPractice();
@@ -4067,7 +4125,7 @@ function renderPractice() {
     setupListeningUI(q);
   }
   if (q.type === 'writing') {
-    const ta = area.querySelector('#writing-input');
+    const ta = area.querySelector('.writing-input');
     if (ta) ta.focus();
   }
   syncPracticeActionButtons();
@@ -4128,6 +4186,597 @@ function rerenderCurrentQuestion() {
   }
 }
 
+/* =========================================================
+   整卷模考
+   ========================================================= */
+const EXAM_PLAN = [
+  { type: 'listening', max: 2, label: '听力理解' },
+  { type: 'choice', max: 10, label: '单项选择' },
+  { type: 'reading', max: 2, label: '阅读理解' },
+  { type: 'cloze', max: 1, label: '综合填空' },
+  { type: 'verb', max: 1, label: '动词填空' },
+  { type: 'writing', max: 1, label: '书面表达' }
+];
+const TYPE_LABEL = { choice: '单项选择', reading: '阅读理解', cloze: '综合填空', verb: '动词填空', listening: '听力题', writing: '作文' };
+
+const exam = {
+  active: false, graded: false, paper: [], sections: [],
+  timeLimit: 60, maxPlays: 2, remaining: 0, timer: null, startedAt: 0,
+  listenState: {}, stats: null
+};
+
+function examSubCount(q) {
+  if (!q) return 0;
+  if (q.type === 'choice') return 1;
+  if (q.type === 'reading') return (q.questions || []).length;
+  if (q.type === 'cloze') return (q.blanks || []).length;
+  if (q.type === 'verb') return (q.sentences || []).length;
+  if (q.type === 'writing') return 0;
+  if (q.type === 'listening') {
+    if (q.subType === 'short_dialogue') return (q.items || []).length;
+    if (q.subType === 'long_dialogue') return (q.questions || []).length;
+    if (q.subType === 'table') return (q.blanks || []).length;
+    return 0;
+  }
+  return 1;
+}
+
+function buildExamSections() {
+  const pool = filterBankList();
+  const typeF = $('bank-filter-type').value;
+  const plan = typeF === 'all'
+    ? EXAM_PLAN
+    : [{ type: typeF, max: 50, label: TYPE_LABEL[typeF] || typeF }];
+  const sections = [];
+  plan.forEach(p => {
+    const qs = shuffle(pool.filter(q => q.type === p.type)).slice(0, p.max);
+    if (qs.length) sections.push({ type: p.type, label: p.label, list: qs });
+  });
+  return sections;
+}
+
+function openExam() {
+  const sections = buildExamSections();
+  if (!sections.length) { toast('当前筛选条件下没有可组卷的题目', 'err'); return; }
+  stopListening();
+  if (exam.timer) { clearInterval(exam.timer); exam.timer = null; }
+  exam.sections = sections;
+  exam.paper = [];
+  sections.forEach(s => s.list.forEach(q => exam.paper.push({ q, id: uid(), section: s, el: null })));
+  exam.active = false;
+  exam.graded = false;
+  exam.stats = null;
+  exam.listenState = {};
+  $('tabs').querySelector('[data-tab="bank"]').click();
+  $('bank-practice').style.display = 'none';
+  $('bank-list-card').style.display = 'none';
+  $('bank-exam').style.display = 'block';
+  $('exam-setup').style.display = 'block';
+  $('exam-report').style.display = 'none';
+  $('exam-report').innerHTML = '';
+  $('exam-paper').style.display = 'none';
+  $('exam-paper').innerHTML = '';
+  $('exam-timer').textContent = '--:--';
+  $('exam-timer').className = 'exam-timer';
+  $('exam-submit').style.display = '';
+  $('exam-exit').textContent = '退出';
+  renderExamSetup();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderExamSetup() {
+  const totalQ = exam.paper.length;
+  const totalSub = exam.paper.reduce((n, r) => n + examSubCount(r.q), 0);
+  const secHtml = exam.sections.map(s => {
+    const subs = s.list.reduce((n, q) => n + examSubCount(q), 0);
+    return `<li><b>${esc(s.label)}</b><span class="muted">${s.list.length} 题 · ${subs} 小题</span></li>`;
+  }).join('');
+  $('exam-sub').textContent = `按题库筛选条件自动组卷 · 共 ${totalQ} 题`;
+  $('exam-setup').innerHTML = `
+    <div class="exam-setup-grid">
+      <div>
+        <div class="exam-total">本卷共 <b>${totalQ}</b> 题、<b>${totalSub}</b> 个计分小题${totalSub ? '' : '（作文交卷后由 AI 批改）'}</div>
+        <ul class="exam-sec-list">${secHtml}</ul>
+      </div>
+      <div>
+        <div class="exam-opt">
+          <label>考试时长</label>
+          <select id="exam-mins">
+            <option value="30">30 分钟</option>
+            <option value="45">45 分钟</option>
+            <option value="60" selected>60 分钟</option>
+            <option value="90">90 分钟</option>
+            <option value="120">120 分钟</option>
+          </select>
+        </div>
+        <div class="exam-opt">
+          <label>听力播放次数上限</label>
+          <select id="exam-plays">
+            <option value="1">1 遍</option>
+            <option value="2" selected>2 遍</option>
+            <option value="0">不限（练习模式）</option>
+          </select>
+        </div>
+        <div class="row" style="margin-top:18px">
+          <button class="btn primary" id="exam-begin">开始考试</button>
+          <button class="btn" id="exam-cancel">取消</button>
+        </div>
+        <p class="muted small" style="margin-top:14px">考试期间不即时判分，交卷后统一给出答案与解析；听力原文与作文 AI 批改在交卷后可用。</p>
+      </div>
+    </div>`;
+}
+
+function renderExamQuestion(q) {
+  if (q.type === 'choice') return renderChoice(q);
+  if (q.type === 'reading') return renderReading(q);
+  if (q.type === 'cloze') return renderCloze(q, { useOptions: true, locked: true });
+  if (q.type === 'verb') return renderVerb(q, { useOptionsVerb: true, locked: true });
+  if (q.type === 'listening') return renderListening(q);
+  if (q.type === 'writing') return renderWriting(q);
+  return '<div class="ai-error">未知题型</div>';
+}
+
+function renderExamPaper() {
+  let html = '';
+  let cur = null;
+  let secIdx = 0;
+  exam.paper.forEach(rec => {
+    if (rec.section !== cur) {
+      if (cur) html += '</section>';
+      cur = rec.section;
+      secIdx++;
+      const subs = cur.list.reduce((n, q) => n + examSubCount(q), 0);
+      html += `<section class="exam-section">
+        <div class="exam-sec-head">
+          <span class="eh-num">${secIdx < 10 ? '0' + secIdx : secIdx}</span>
+          <span class="eh-title">${esc(cur.label)}</span>
+          <span class="eh-note">${cur.list.length} 题 · ${subs} 小题</span>
+        </div>`;
+    }
+    html += `<div class="exam-q" data-eid="${rec.id}">${renderExamQuestion(rec.q)}</div>`;
+  });
+  if (cur) html += '</section>';
+  $('exam-paper').innerHTML = html;
+}
+
+function bindExamPaper() {
+  const paper = $('exam-paper');
+  applyAllMarks(paper);
+  exam.paper.forEach(rec => {
+    rec.el = paper.querySelector(`.exam-q[data-eid="${rec.id}"]`);
+    if (!rec.el) return;
+    if (rec.q.type === 'listening') {
+      const st = { listenPlayed: 0, listenItemPlayed: {} };
+      exam.listenState[rec.id] = st;
+      setupListeningUI(rec.q, { root: rec.el, state: st, maxPlays: exam.maxPlays, gradeOnBlur: false });
+    }
+    if (rec.q.type === 'writing') {
+      const btn = rec.el.querySelector('.writing-submit');
+      const st = rec.el.querySelector('.writing-status');
+      if (btn) { btn.disabled = true; btn.textContent = '交卷后可提交 AI 批改'; }
+      if (st) st.textContent = '考试中不可提交';
+    }
+  });
+}
+
+function beginExam() {
+  const mins = parseInt($('exam-mins').value, 10) || 60;
+  const playsRaw = parseInt($('exam-plays').value, 10);
+  exam.timeLimit = mins;
+  exam.maxPlays = isNaN(playsRaw) ? 2 : playsRaw;
+  exam.active = true;
+  exam.graded = false;
+  exam.startedAt = Date.now();
+  exam.remaining = mins * 60;
+  $('exam-setup').style.display = 'none';
+  $('exam-report').style.display = 'none';
+  $('exam-paper').style.display = 'block';
+  renderExamPaper();
+  bindExamPaper();
+  updateExamTimer();
+  if (exam.timer) clearInterval(exam.timer);
+  exam.timer = setInterval(examTick, 1000);
+  toast(`考试开始 · 时长 ${mins} 分钟`, 'ok');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function examTimerText(sec) {
+  sec = Math.max(0, parseInt(sec, 10) || 0);
+  const s = sec % 60, m = Math.floor(sec / 60);
+  const pad = n => (n < 10 ? '0' : '') + n;
+  if (m >= 60) return pad(Math.floor(m / 60)) + ':' + pad(m % 60) + ':' + pad(s);
+  return pad(m) + ':' + pad(s);
+}
+
+function updateExamTimer() {
+  const el = $('exam-timer');
+  el.textContent = examTimerText(exam.remaining);
+  el.classList.toggle('warn', exam.remaining <= 300 && exam.remaining > 60);
+  el.classList.toggle('over', exam.remaining <= 60);
+}
+
+function examTick() {
+  if (!exam.active || exam.graded) return;
+  exam.remaining--;
+  if (exam.remaining <= 0) {
+    exam.remaining = 0;
+    updateExamTimer();
+    finishExam(true);
+    return;
+  }
+  updateExamTimer();
+  if (exam.remaining === 300) toast('还剩 5 分钟');
+  if (exam.remaining === 60) toast('还剩 1 分钟', 'err');
+}
+
+function countExamAnswered() {
+  let done = 0, total = 0;
+  exam.paper.forEach(rec => {
+    const q = rec.q, el = rec.el;
+    if (!el) return;
+    const has = sel => !!el.querySelector(sel);
+    if (q.type === 'choice') {
+      total++; if (has('.q-options .q-option.chosen')) done++;
+    } else if (q.type === 'reading') {
+      (q.questions || []).forEach((sq, i) => { total++; if (has(`.q-options[data-sidx="${i}"] .q-option.chosen`)) done++; });
+    } else if (q.type === 'cloze') {
+      const allOpts = (q.blanks || []).every(b => Array.isArray(b.options) && b.options.length >= 2);
+      (q.blanks || []).forEach((b, i) => {
+        total++;
+        if (allOpts) { if (has(`.blank-opts[data-bidx="${i}"] .blank-opt.chosen`)) done++; }
+        else { const inp = el.querySelector(`input[data-cidx="${i}"]`); if (inp && inp.value.trim()) done++; }
+      });
+    } else if (q.type === 'verb') {
+      const allOpts = (q.sentences || []).every(s => Array.isArray(s.options) && s.options.length >= 2);
+      (q.sentences || []).forEach((s, i) => {
+        total++;
+        if (allOpts) { if (has(`.blank-opts[data-bidx="${i}"] .blank-opt.chosen`)) done++; }
+        else { const inp = el.querySelector(`input.verb-input[data-vidx="${i}"]`); if (inp && inp.value.trim()) done++; }
+      });
+    } else if (q.type === 'listening') {
+      if (q.subType === 'short_dialogue') {
+        (q.items || []).forEach((it, i) => { total++; if (has(`.q-options[data-lidx="${i}"] .q-option.chosen`)) done++; });
+      } else if (q.subType === 'long_dialogue') {
+        (q.questions || []).forEach((sq, i) => { total++; if (has(`.q-options[data-sidx="${i}"] .q-option.chosen`)) done++; });
+      } else if (q.subType === 'table') {
+        (q.blanks || []).forEach(b => { total++; const inp = el.querySelector(`input.table-input[data-trow="${b.row}"][data-tcol="${b.col}"]`); if (inp && inp.value.trim()) done++; });
+      }
+    } else if (q.type === 'writing') {
+      total++;
+      const ta = el.querySelector('.writing-input');
+      if (ta && ta.value.trim()) done++;
+    }
+  });
+  return { done, total };
+}
+
+function finishExam(auto) {
+  if (!exam.active || exam.graded) return;
+  if (auto) {
+    toast('时间到，已自动交卷', 'err');
+  } else {
+    const c = countExamAnswered();
+    const left = c.total - c.done;
+    const msg = `确认交卷？\n已作答 ${c.done} / ${c.total} 处` + (left > 0 ? `\n还有 ${left} 处未作答。` : '');
+    if (!window.confirm(msg)) return;
+  }
+  gradeExam();
+}
+
+function gradeExam() {
+  if (exam.graded) return;
+  exam.graded = true;
+  exam.active = false;
+  stopListening();
+  if (exam.timer) { clearInterval(exam.timer); exam.timer = null; }
+  const used = exam.timeLimit * 60 - exam.remaining;
+
+  let total = 0, right = 0;
+  const secMap = new Map();
+  exam.paper.forEach(rec => {
+    const r = gradeExamQuestion(rec);
+    const row = secMap.get(rec.section) || { label: rec.section.label, total: 0, correct: 0 };
+    row.total += r.total;
+    row.correct += r.correct;
+    secMap.set(rec.section, row);
+    total += r.total;
+    right += r.correct;
+  });
+  const secRows = exam.sections.map(s => secMap.get(s)).filter(Boolean);
+  exam.stats = { total, right, secRows, used };
+
+  exam.paper.forEach(rec => {
+    if (!rec.el) return;
+    rec.el.querySelectorAll('.lp-play-main').forEach(b => { b.disabled = true; b.classList.remove('playing'); b.textContent = '🎧 交卷后不可播放'; });
+    rec.el.querySelectorAll('[data-lplay]').forEach(b => { b.disabled = true; b.classList.remove('playing'); });
+    rec.el.querySelectorAll('.lp-script-toggle').forEach(b => { b.style.display = 'none'; });
+    rec.el.querySelectorAll('.lp-script').forEach(s => s.classList.remove('hidden'));
+    if (rec.q.type === 'writing') {
+      const btn = rec.el.querySelector('.writing-submit');
+      const st = rec.el.querySelector('.writing-status');
+      if (btn) { btn.disabled = false; btn.textContent = '🤖 提交 AI 批改'; }
+      if (st) st.textContent = '';
+    }
+  });
+
+  $('exam-submit').style.display = 'none';
+  $('exam-exit').textContent = '退出模考';
+  renderExamReport();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function gradeExamQuestion(rec) {
+  const root = rec.el, q = rec.q;
+  let total = 0, correct = 0;
+  if (!root) return { total, correct };
+  const pushResult = html => {
+    const area = root.querySelector('.q-result-area');
+    if (!area) return;
+    if (!area.dataset.init) { area.dataset.init = '1'; area.innerHTML = ''; }
+    area.insertAdjacentHTML('beforeend', html);
+  };
+  const subResult = (sel, html) => { const el = root.querySelector(sel); if (el) el.innerHTML = html; };
+  const optsOf = sel => [...root.querySelectorAll(sel)];
+  const pick = list => list.find(o => o.classList.contains('chosen')) || null;
+  const lockOpts = (list, answer, chosen) => list.forEach(o => {
+    o.disabled = true;
+    if (o.dataset.val === answer) o.classList.add('correct');
+    else if (o === chosen) o.classList.add('wrong');
+  });
+  const head = (ok, chosen) => (ok ? '✅ 正确' : (chosen ? '❌ 错误' : '⚪ 未作答'));
+
+  if (q.type === 'choice') {
+    total = 1;
+    const opts = optsOf('.q-options .q-option');
+    const chosen = pick(opts);
+    const val = chosen ? chosen.dataset.val : '';
+    const ok = !!chosen && val === q.answer;
+    if (ok) correct++;
+    recordItem(q, ok, q.point);
+    lockOpts(opts, q.answer, chosen);
+    pushResult(buildResultBox(q, chosen ? val : '（未作答）', ok));
+
+  } else if (q.type === 'reading') {
+    (q.questions || []).forEach((sq, i) => {
+      total++;
+      const opts = optsOf(`.q-options[data-sidx="${i}"] .q-option`);
+      const chosen = pick(opts);
+      const val = chosen ? chosen.dataset.val : '';
+      const ok = !!chosen && val === sq.answer;
+      if (ok) correct++;
+      recordItem(q, ok, sq.point || q.point);
+      lockOpts(opts, sq.answer, chosen);
+      subResult(`.sub-result[data-sidx="${i}"]`,
+        `<div class="explain-box${ok ? '' : ' ai'}"><div class="head">${head(ok, chosen)}</div>` +
+        `<div style="margin-bottom:4px">你的答案：<b>${esc(val || '（空）')}</b> ｜ 正确答案：<b>${esc(sq.answer)}</b></div>` +
+        `${sq.explanation ? esc(sq.explanation) : '（无解析）'}</div>`);
+    });
+
+  } else if (q.type === 'cloze') {
+    const allOpts = (q.blanks || []).every(b => Array.isArray(b.options) && b.options.length >= 2);
+    (q.blanks || []).forEach((b, i) => {
+      total++;
+      let val = '', ok = false;
+      if (allOpts) {
+        const group = root.querySelector(`.blank-opts[data-bidx="${i}"]`);
+        const chosen = group ? group.querySelector('.blank-opt.chosen') : null;
+        val = chosen ? chosen.dataset.val : '';
+        ok = !!chosen && val === b.answer;
+        if (group) lockOpts([...group.querySelectorAll('.blank-opt')], b.answer, chosen);
+        const mark = root.querySelector(`.blank-mark[data-bidx="${i}"]`);
+        if (mark && val) mark.textContent = '[' + (i + 1) + '] ' + val;
+      } else {
+        const inp = root.querySelector(`input[data-cidx="${i}"]`);
+        val = inp ? inp.value.trim() : '';
+        ok = !!val && val.toLowerCase() === String(b.answer).toLowerCase();
+        if (inp) { inp.disabled = true; inp.classList.add(ok ? 'correct' : 'wrong'); }
+      }
+      if (ok) correct++;
+      recordItem(q, ok, b.point || q.point);
+      pushResult(`<div class="explain-box${ok ? '' : ' ai'}"><div class="head">[${i + 1}] ${ok ? '✅ 正确' : (val ? '❌ 错误' : '⚪ 未作答')}</div>` +
+        `你的答案：<b>${esc(val || '（空）')}</b> ｜ 正确答案：<b>${esc(b.answer)}</b>` +
+        `${b.explanation ? `<div style="margin-top:4px">${esc(b.explanation)}</div>` : ''}</div>`);
+    });
+
+  } else if (q.type === 'verb') {
+    const allOpts = (q.sentences || []).every(s => Array.isArray(s.options) && s.options.length >= 2);
+    (q.sentences || []).forEach((s, i) => {
+      total++;
+      let val = '', ok = false;
+      if (allOpts) {
+        const group = root.querySelector(`.blank-opts[data-bidx="${i}"]`);
+        const chosen = group ? group.querySelector('.blank-opt.chosen') : null;
+        val = chosen ? chosen.dataset.val : '';
+        ok = !!chosen && val === s.answer;
+        if (group) lockOpts([...group.querySelectorAll('.blank-opt')], s.answer, chosen);
+        const mark = root.querySelector(`.inline-input[data-vidx="${i}"]`);
+        if (mark && val) {
+          mark.textContent = val;
+          mark.style.color = ok ? 'var(--olive)' : 'var(--accent)';
+          mark.style.borderBottomColor = ok ? 'var(--olive)' : 'var(--accent)';
+        }
+      } else {
+        const inp = root.querySelector(`input.verb-input[data-vidx="${i}"]`);
+        val = inp ? inp.value.trim() : '';
+        ok = !!val && val.toLowerCase() === String(s.answer).toLowerCase();
+        if (inp) { inp.disabled = true; inp.classList.add(ok ? 'correct' : 'wrong'); }
+      }
+      if (ok) correct++;
+      recordItem(q, ok, s.point || q.point);
+      const line = root.querySelector(`.verb-sentence[data-vidx="${i}"] .result-line`);
+      const html = `<span style="color:${ok ? 'var(--olive)' : 'var(--accent)'}">${head(ok, !!val)}</span>　你的答案：<b>${esc(val || '（空）')}</b>　正确答案：<b>${esc(s.answer)}</b>${s.explanation ? '　' + esc(s.explanation) : ''}`;
+      if (line) line.innerHTML = html;
+      else pushResult(`<div class="explain-box${ok ? '' : ' ai'}">${html}</div>`);
+    });
+
+  } else if (q.type === 'listening') {
+    if (q.subType === 'short_dialogue') {
+      (q.items || []).forEach((it, i) => {
+        total++;
+        const opts = optsOf(`.q-options[data-lidx="${i}"] .q-option`);
+        const chosen = pick(opts);
+        const val = chosen ? chosen.dataset.val : '';
+        const ok = !!chosen && val === it.answer;
+        if (ok) correct++;
+        recordItem(q, ok, it.point || q.point);
+        lockOpts(opts, it.answer, chosen);
+        subResult(`.sub-result[data-lidx="${i}"]`,
+          `<div class="explain-box${ok ? '' : ' ai'}"><div class="head">${head(ok, chosen)}</div>` +
+          `<div style="margin-bottom:4px">你的答案：<b>${esc(val || '（空）')}</b> ｜ 正确答案：<b>${esc(it.answer)}</b></div>` +
+          `${it.explanation ? esc(it.explanation) : '（无解析）'}` +
+          `<div style="margin-top:8px;font-size:12.5px;color:var(--ink-3)">原文：${esc(it.script || '').replace(/\n/g, ' / ')}</div></div>`);
+      });
+    } else if (q.subType === 'long_dialogue') {
+      (q.questions || []).forEach((sq, i) => {
+        total++;
+        const opts = optsOf(`.q-options[data-sidx="${i}"] .q-option`);
+        const chosen = pick(opts);
+        const val = chosen ? chosen.dataset.val : '';
+        const ok = !!chosen && val === sq.answer;
+        if (ok) correct++;
+        recordItem(q, ok, sq.point || q.point);
+        lockOpts(opts, sq.answer, chosen);
+        subResult(`.sub-result[data-sidx="${i}"]`,
+          `<div class="explain-box${ok ? '' : ' ai'}"><div class="head">${head(ok, chosen)}</div>` +
+          `<div style="margin-bottom:4px">你的答案：<b>${esc(val || '（空）')}</b> ｜ 正确答案：<b>${esc(sq.answer)}</b></div>` +
+          `${sq.explanation ? esc(sq.explanation) : '（无解析）'}</div>`);
+      });
+    } else if (q.subType === 'table') {
+      (q.blanks || []).forEach(b => {
+        total++;
+        const inp = root.querySelector(`input.table-input[data-trow="${b.row}"][data-tcol="${b.col}"]`);
+        const val = inp ? inp.value.trim() : '';
+        const ok = !!val && val.toLowerCase() === String(b.answer).toLowerCase();
+        if (ok) correct++;
+        recordItem(q, ok, b.point || q.point);
+        if (inp) { inp.disabled = true; inp.classList.add(ok ? 'correct' : 'wrong'); }
+        pushResult(`<div class="explain-box${ok ? '' : ' ai'}"><div class="head">[${b.row + 1},${b.col + 1}] ${ok ? '✅ 正确' : (val ? '❌ 错误' : '⚪ 未作答')}</div>` +
+          `你的答案：<b>${esc(val || '（空）')}</b> ｜ 正确答案：<b>${esc(b.answer)}</b>` +
+          `${b.explanation ? ' · ' + esc(b.explanation) : ''}</div>`);
+      });
+    }
+  }
+
+  return { total, correct };
+}
+
+function renderExamReport() {
+  const st = exam.stats || { total: 0, right: 0, secRows: [], used: 0 };
+  const pct = st.total ? Math.round(st.right / st.total * 100) : null;
+  const answered = countExamAnswered();
+  const rowsHtml = st.secRows.map(r =>
+    `<tr><td>${esc(r.label)}</td><td>${r.total}</td><td>${r.correct}</td><td>${r.total ? Math.round(r.correct / r.total * 100) + '%' : '—'}</td></tr>`).join('');
+  const wrongCount = st.total - st.right;
+  const autoW = !!(settings && settings.autoWrong !== false);
+  const writingRec = exam.paper.find(r => r.q.type === 'writing');
+  let essayHtml = '';
+  if (writingRec) {
+    const ta = writingRec.el && writingRec.el.querySelector('.writing-input');
+    const txt = ta ? ta.value.trim() : '';
+    const words = txt ? txt.split(/\s+/).filter(Boolean).length : 0;
+    essayHtml = `<div class="row" style="margin-top:10px">
+      <button class="btn sm" id="exam-essay-jump">查看 / AI 批改作文</button>
+      <span class="muted small">${txt ? `作文已写 <b>${words}</b> 词，交卷后可提交 AI 批改` : '作文未填写'}</span>
+    </div>`;
+  }
+  const el = $('exam-report');
+  el.innerHTML = `
+    <div class="exam-report-top">
+      <div>
+        <div class="exam-score">${st.total ? st.right + '<small> / ' + st.total + ' 小题</small>' : '作文卷'}</div>
+        <div class="muted small" style="margin-top:6px">
+          ${pct == null ? '本卷无客观计分题' : '正确率 ' + pct + '%（错 ' + wrongCount + ' 小题）'}
+          · 用时 ${examTimerText(st.used)}${exam.remaining <= 0 ? ' · 时间到自动交卷' : ''}
+          · 已作答 ${answered.done}/${answered.total} 处
+        </div>
+      </div>
+      <div class="row">
+        <button class="btn" id="exam-again">再来一份</button>
+        <button class="btn primary" id="exam-close">退出模考</button>
+      </div>
+    </div>
+    <table class="exam-sec-table">
+      <thead><tr><th>题型</th><th>小题</th><th>正确</th><th>正确率</th></tr></thead>
+      <tbody>${rowsHtml || '<tr><td colspan="4">本卷无客观题</td></tr>'}</tbody>
+    </table>
+    ${wrongCount > 0
+      ? `<p class="small muted">做错的 ${wrongCount} 个小题${autoW ? '已自动加入错题本' : '未加入错题本（设置中已关闭自动加错题）'}。</p>`
+      : '<p class="small muted">客观题全部正确 🎉</p>'}
+    ${essayHtml}
+    <div id="exam-wrong-note"></div>`;
+  el.style.display = 'block';
+  $('exam-paper').style.display = 'block';
+}
+
+function closeExam(force) {
+  if (!force && exam.active && !exam.graded) {
+    if (!window.confirm('考试进行中，退出将放弃本次成绩。确定退出？')) return;
+  }
+  stopListening();
+  if (exam.timer) { clearInterval(exam.timer); exam.timer = null; }
+  exam.active = false;
+  $('bank-exam').style.display = 'none';
+  $('exam-setup').innerHTML = '';
+  $('exam-report').innerHTML = '';
+  $('exam-report').style.display = 'none';
+  $('exam-paper').innerHTML = '';
+  $('exam-paper').style.display = 'none';
+  $('bank-list-card').style.display = 'block';
+  renderBankList();
+}
+
+$('bank-exam-start').addEventListener('click', openExam);
+
+$('bank-exam').addEventListener('click', e => {
+  const t = e.target;
+  if (t.closest('#exam-begin')) return beginExam();
+  if (t.closest('#exam-cancel')) return closeExam();
+  if (t.closest('#exam-submit')) return finishExam(false);
+  if (t.closest('#exam-exit')) return closeExam();
+  if (t.closest('#exam-again')) return openExam();
+  if (t.closest('#exam-close')) return closeExam(true);
+  if (t.closest('#exam-essay-jump')) {
+    const rec = exam.paper.find(r => r.q.type === 'writing');
+    if (rec && rec.el) {
+      rec.el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const ta = rec.el.querySelector('.writing-input');
+      if (ta) ta.focus();
+    }
+    return;
+  }
+});
+
+$('exam-paper').addEventListener('click', e => {
+  if (!exam.graded) {
+    const opt = e.target.closest('.q-option, .blank-opt');
+    if (!opt || opt.disabled) return;
+    [...opt.parentElement.children].forEach(x => {
+      if (x.classList && (x.classList.contains('q-option') || x.classList.contains('blank-opt'))) x.classList.remove('chosen');
+    });
+    opt.classList.add('chosen');
+    if (opt.classList.contains('blank-opt')) {
+      const card = opt.closest('.exam-q');
+      const bidx = opt.dataset.bidx;
+      if (card) {
+        const mark = card.querySelector(`.blank-mark[data-bidx="${bidx}"]`);
+        if (mark) mark.textContent = '[' + (parseInt(bidx, 10) + 1) + '] ' + opt.dataset.val;
+        const vmark = card.querySelector(`.inline-input[data-vidx="${bidx}"]`);
+        if (vmark) {
+          vmark.textContent = opt.dataset.val;
+          vmark.style.color = 'var(--blue)';
+          vmark.style.borderBottomColor = 'var(--blue)';
+        }
+      }
+    }
+    return;
+  }
+  const sub = e.target.closest('.writing-submit');
+  if (!sub || sub.disabled) return;
+  const wrap = sub.closest('.exam-q');
+  const rec = exam.paper.find(r => r.el === wrap);
+  if (rec) handleWritingSubmit(rec.q, { root: wrap });
+});
+
 /* ---- 选择题渲染 ---- */
 function renderChoice(q) {
   return `
@@ -4165,8 +4814,10 @@ function renderReading(q) {
 }
 
 /* ---- 综合填空渲染（支持四选一 / 自由填词） ---- */
-function renderCloze(q) {
-  const useOptions = practice.state.useOptions !== false;
+function renderCloze(q, ctx) {
+  ctx = ctx || {};
+  const locked = !!ctx.locked;
+  const useOptions = (ctx.useOptions !== undefined ? ctx.useOptions : practice.state.useOptions) !== false;
   const allHaveOptions = q.blanks.every(b => Array.isArray(b.options) && b.options.length >= 2);
 
   let text = esc(q.passage);
@@ -4186,7 +4837,9 @@ function renderCloze(q) {
     });
   }
 
-  const toolbar = `
+  const toolbar = locked
+    ? `<div class="cloze-toolbar"><span class="muted">${allHaveOptions ? '考试模式：每空从 ABCD 中选择' : '考试模式：此篇未提供选项，请自己填写单词'}</span></div>`
+    : `
     <div class="cloze-toolbar">
       <label class="switch-inline" style="margin:0;padding:8px 12px">
         <input type="checkbox" id="cloze-use-options"${useOptions && allHaveOptions ? ' checked' : ''}${allHaveOptions ? '' : ' disabled'}>
@@ -4225,11 +4878,15 @@ function renderCloze(q) {
 }
 
 /* ---- 动词填空渲染（支持四选一 / 自由填词） ---- */
-function renderVerb(q) {
-  const useOptions = practice.state.useOptionsVerb !== false;
+function renderVerb(q, ctx) {
+  ctx = ctx || {};
+  const locked = !!ctx.locked;
+  const useOptions = (ctx.useOptionsVerb !== undefined ? ctx.useOptionsVerb : practice.state.useOptionsVerb) !== false;
   const allHaveOptions = q.sentences.every(s => Array.isArray(s.options) && s.options.length >= 2);
 
-  const toolbar = `
+  const toolbar = locked
+    ? `<div class="cloze-toolbar"><span class="muted">${allHaveOptions ? '考试模式：每空从 ABCD 中选择动词形式' : '考试模式：此篇未提供选项，请自己填写动词形式'}</span></div>`
+    : `
     <div class="cloze-toolbar">
       <label class="switch-inline" style="margin:0;padding:8px 12px">
         <input type="checkbox" id="verb-use-options"${useOptions && allHaveOptions ? ' checked' : ''}${allHaveOptions ? '' : ' disabled'}>
@@ -4339,18 +4996,18 @@ function renderListeningLong(q) {
         <b>📢 题型说明：</b>${esc(q.instructions)}<br>
         <b>⏱ 建议读题时间：</b>${q.prepTime} 秒
       </div>
-      <div class="listening-player" id="listen-long-player">
+      <div class="listening-player">
         <span class="lp-icon">🎧</span>
         <div class="lp-body">
           <div class="lp-title">长对话录音</div>
-          <div class="lp-info" id="ll-info">已播放 0 遍（建议听 2 遍）</div>
+          <div class="lp-info lp-info-main">已播放 0 遍（建议听 2 遍）</div>
         </div>
         <div class="lp-controls">
-          <button id="ll-play">▶ 播放录音</button>
-          <button id="ll-script-toggle">👁 显示原文</button>
+          <button class="lp-play-main">▶ 播放录音</button>
+          <button class="lp-script-toggle">👁 显示原文</button>
         </div>
       </div>
-      <div class="listening-script hidden" id="ll-script" data-hl-zone="${esc((q.id || 'q') + ':ll')}">${esc(q.script)}</div>
+      <div class="listening-script hidden lp-script" data-hl-zone="${esc((q.id || 'q') + ':ll')}">${esc(q.script)}</div>
       ${q.questions.map((sq, qi) => `
         <div class="sub-q" data-sidx="${qi}">
           <p class="sub-q-text"><span class="sub-q-head">Q${qi+1}.</span>${esc(sq.question)}</p>
@@ -4387,18 +5044,18 @@ function renderListeningTable(q) {
         <b>📢 题型说明：</b>${esc(q.instructions)}<br>
         <b>⏱ 建议读题时间：</b>${q.prepTime} 秒 · <b>共 ${q.blanks.length} 空</b>
       </div>
-      <div class="listening-player" id="listen-table-player">
+      <div class="listening-player">
         <span class="lp-icon">🎧</span>
         <div class="lp-body">
           <div class="lp-title">${esc(q.title || '听力材料')}</div>
-          <div class="lp-info" id="lt-info">已播放 0 遍（建议听 2 遍）</div>
+          <div class="lp-info lp-info-main">已播放 0 遍（建议听 2 遍）</div>
         </div>
         <div class="lp-controls">
-          <button id="lt-play">▶ 播放录音</button>
-          <button id="lt-script-toggle">👁 显示原文</button>
+          <button class="lp-play-main">▶ 播放录音</button>
+          <button class="lp-script-toggle">👁 显示原文</button>
         </div>
       </div>
-      <div class="listening-script hidden" id="lt-script" data-hl-zone="${esc((q.id || 'q') + ':lt')}">${esc(q.script)}</div>
+      <div class="listening-script hidden lp-script" data-hl-zone="${esc((q.id || 'q') + ':lt')}">${esc(q.script)}</div>
       <table class="listening-table">
         <thead><tr>${headerHtml}</tr></thead>
         <tbody>${rowsHtml}</tbody>
@@ -4414,93 +5071,97 @@ function renderWriting(q) {
       <div class="q-meta"><span class="tag accent">作文</span><span class="tag">难度 ${starLabel(q.difficulty)}</span></div>
       <p class="writing-prompt" data-hl-zone="${esc((q.id || 'q') + ':w')}">${esc(q.prompt)}</p>
       ${q.hints.length ? `<ul class="writing-hints">${q.hints.map(h => `<li>${esc(h)}</li>`).join('')}</ul>` : ''}
-      <textarea id="writing-input" class="writing-area" placeholder="在此处用英文写作…"></textarea>
+      <textarea class="writing-input writing-area" placeholder="在此处用英文写作…"></textarea>
       <div class="row" style="margin-top:12px">
-        <button class="btn primary" id="writing-submit">提交给 AI 批改</button>
-        <span class="muted small" id="writing-status"></span>
+        <button class="btn primary writing-submit">提交给 AI 批改</button>
+        <span class="muted small writing-status"></span>
       </div>
-      <div id="writing-appreciation"></div>
+      <div class="writing-appreciation"></div>
     </div>`;
 }
 
-/* ---- 听力 UI 绑定 ---- */
-function setupListeningUI(q) {
-  const area = $('bank-question-area');
+/* ---- 听力 UI 绑定（作用域可传入，供练习与整卷复用） ---- */
+function setupListeningUI(q, opts) {
+  opts = opts || {};
+  const root = opts.root || $('bank-question-area');
+  const state = opts.state || practice.state;
+  const maxPlays = opts.maxPlays || 0;          // >0 时强制只可播放 N 遍
+  const gradeOnBlur = opts.gradeOnBlur !== false;
+  const plays = () => state.listenPlayed || 0;
+  const bumpPlay = () => { state.listenPlayed = plays() + 1; return state.listenPlayed; };
+  const atLimit = () => maxPlays > 0 && plays() >= maxPlays;
+
+  const bindPlayer = (btn, info, toggle, script) => {
+    const applyLimit = () => {
+      if (!atLimit()) return;
+      if (btn) { btn.disabled = true; btn.textContent = '🚫 听力已播放 ' + maxPlays + ' 遍，无法再听'; }
+      if (toggle) toggle.style.display = 'none';
+      if (script) script.classList.add('hidden');
+      if (info) info.textContent = '已播放 ' + plays() + ' 遍（本场考试上限 ' + maxPlays + ' 遍）';
+    };
+    if (btn) {
+      btn.addEventListener('click', async () => {
+        if (atLimit()) { toast('本场考试听力只可播放 ' + maxPlays + ' 遍', 'err'); return; }
+        btn.disabled = true;
+        btn.classList.add('playing');
+        btn.textContent = '⏸ 播放中…';
+        await playListeningScript(q.script, (phase) => {
+          if (phase === 'end') {
+            const n = bumpPlay();
+            if (info) info.textContent = maxPlays
+              ? `已播放 ${n} 遍（本场考试上限 ${maxPlays} 遍）`
+              : `已播放 ${n} 遍（建议听 2 遍）`;
+            btn.classList.remove('playing');
+            if (atLimit()) applyLimit();
+            else { btn.disabled = false; btn.textContent = '▶ 再听一遍'; }
+          }
+        });
+      });
+    }
+    if (toggle && script) {
+      toggle.addEventListener('click', () => {
+        script.classList.toggle('hidden');
+        toggle.textContent = script.classList.contains('hidden') ? '👁 显示原文' : '🙈 隐藏原文';
+      });
+    }
+    applyLimit();
+  };
 
   if (q.subType === 'short_dialogue') {
-    area.querySelectorAll('button[data-lplay]').forEach(btn => {
+    root.querySelectorAll('button[data-lplay]').forEach(btn => {
       btn.addEventListener('click', async () => {
         const idx = parseInt(btn.dataset.lplay);
+        const key = 'i' + idx;
         const it = q.items[idx];
         if (!it || !it.script) { toast('该段无录音文本', 'err'); return; }
+        state.listenItemPlayed = state.listenItemPlayed || {};
+        if (maxPlays > 0 && (state.listenItemPlayed[key] || 0) >= maxPlays) {
+          toast('本场考试听力只可播放 ' + maxPlays + ' 遍', 'err'); return;
+        }
         btn.classList.add('playing');
         btn.disabled = true;
         await playListeningScript(it.script, () => {
-          btn.classList.remove('playing');
-          btn.disabled = false;
+          state.listenItemPlayed[key] = (state.listenItemPlayed[key] || 0) + 1;
+          const n = state.listenItemPlayed[key];
+          if (maxPlays > 0 && n >= maxPlays) { btn.disabled = true; btn.classList.remove('playing'); btn.textContent = '🚫 已听 ' + maxPlays + ' 遍'; }
+          else { btn.classList.remove('playing'); btn.disabled = false; btn.textContent = '▶ 再听第 ' + (idx + 1) + ' 段'; }
         });
       });
     });
+    return;
   }
 
-  if (q.subType === 'long_dialogue') {
-    const btn = area.querySelector('#ll-play');
-    const info = area.querySelector('#ll-info');
-    const toggle = area.querySelector('#ll-script-toggle');
-    const script = area.querySelector('#ll-script');
-    if (btn) {
-      btn.addEventListener('click', async () => {
-        btn.disabled = true;
-        btn.classList.add('playing');
-        btn.textContent = '⏸ 播放中…';
-        await playListeningScript(q.script, (phase) => {
-          if (phase === 'end') {
-            practice.state.listenPlayed = (practice.state.listenPlayed || 0) + 1;
-            info.textContent = `已播放 ${practice.state.listenPlayed} 遍（建议听 2 遍）`;
-            btn.disabled = false;
-            btn.classList.remove('playing');
-            btn.textContent = '▶ 再听一遍';
-          }
-        });
-      });
-    }
-    if (toggle) {
-      toggle.addEventListener('click', () => {
-        script.classList.toggle('hidden');
-        toggle.textContent = script.classList.contains('hidden') ? '👁 显示原文' : '🙈 隐藏原文';
-      });
-    }
+  if (q.subType === 'long_dialogue' || q.subType === 'table') {
+    bindPlayer(
+      root.querySelector('.lp-play-main'),
+      root.querySelector('.lp-info-main'),
+      root.querySelector('.lp-script-toggle'),
+      root.querySelector('.lp-script')
+    );
   }
 
-  if (q.subType === 'table') {
-    const btn = area.querySelector('#lt-play');
-    const info = area.querySelector('#lt-info');
-    const toggle = area.querySelector('#lt-script-toggle');
-    const script = area.querySelector('#lt-script');
-    if (btn) {
-      btn.addEventListener('click', async () => {
-        btn.disabled = true;
-        btn.classList.add('playing');
-        btn.textContent = '⏸ 播放中…';
-        await playListeningScript(q.script, (phase) => {
-          if (phase === 'end') {
-            practice.state.listenPlayed = (practice.state.listenPlayed || 0) + 1;
-            info.textContent = `已播放 ${practice.state.listenPlayed} 遍（建议听 2 遍）`;
-            btn.disabled = false;
-            btn.classList.remove('playing');
-            btn.textContent = '▶ 再听一遍';
-          }
-        });
-      });
-    }
-    if (toggle) {
-      toggle.addEventListener('click', () => {
-        script.classList.toggle('hidden');
-        toggle.textContent = script.classList.contains('hidden') ? '👁 显示原文' : '🙈 隐藏原文';
-      });
-    }
-    // 表格填空：失焦即判定
-    area.querySelectorAll('input.table-input').forEach(inp => {
+  if (q.subType === 'table' && gradeOnBlur) {
+    root.querySelectorAll('input.table-input').forEach(inp => {
       inp.addEventListener('blur', () => checkListeningTable(q));
       inp.addEventListener('keydown', e => {
         if (e.key === 'Enter') { e.preventDefault(); checkListeningTable(q); }
@@ -4767,7 +5428,7 @@ $('bank-question-area').addEventListener('click', e => {
 
   // 作文提交
   if (q.type === 'writing') {
-    if (e.target.id === 'writing-submit') handleWritingSubmit(q);
+    if (e.target.closest('.writing-submit')) handleWritingSubmit(q, { root: $('bank-question-area') });
     return;
   }
 });
@@ -4812,12 +5473,14 @@ $('bank-question-area').addEventListener('blur', e => {
 }, true);
 
 /* ---- 作文提交 ---- */
-async function handleWritingSubmit(q) {
-  const ta = $('bank-question-area').querySelector('#writing-input');
+async function handleWritingSubmit(q, opts) {
+  opts = opts || {};
+  const root = opts.root || $('bank-question-area');
+  const ta = root.querySelector('.writing-input');
   const essay = ta ? ta.value.trim() : '';
   if (!essay) { toast('请先写作文', 'err'); return; }
-  const status = $('bank-question-area').querySelector('#writing-status');
-  const out = $('bank-question-area').querySelector('#writing-appreciation');
+  const status = root.querySelector('.writing-status');
+  const out = root.querySelector('.writing-appreciation');
   status.textContent = 'AI 批改中…';
   out.innerHTML = '<div class="ai-loading">正在批改作文<span class="dot"></span><span class="dot"></span><span class="dot"></span></div>';
   try {
@@ -4948,7 +5611,7 @@ $('bank-reveal').addEventListener('click', () => {
         practice.state.subAnswered.add(i);
       });
       // 显示原文
-      const scr = area.querySelector('#ll-script');
+      const scr = area.querySelector('.lp-script');
       if (scr) scr.classList.remove('hidden');
       practice.answered = true;
     } else if (q.subType === 'table') {
@@ -4962,12 +5625,12 @@ $('bank-reveal').addEventListener('click', () => {
         inp.classList.add('correct');
         practice.state.blankAnswered.add(key);
       });
-      const scr = area.querySelector('#lt-script');
+      const scr = area.querySelector('.lp-script');
       if (scr) scr.classList.remove('hidden');
       practice.answered = true;
     }
   } else if (q.type === 'writing') {
-    const out = area.querySelector('#writing-appreciation');
+    const out = area.querySelector('.writing-appreciation');
     if (q.sample) out.innerHTML = `<div class="explain-box"><div class="head">参考范文</div>${esc(q.sample)}</div>`;
     else toast('该题未附带范文，可使用「AI 解析」生成赏析');
   }
@@ -5027,7 +5690,7 @@ $('bank-ai-explain').addEventListener('click', async () => {
       }).join('\n');
     }
   } else if (q.type === 'writing') {
-    const ta = area.querySelector('#writing-input');
+    const ta = area.querySelector('.writing-input');
     userInfo = ta?.value || '(无内容)';
   }
 
@@ -5349,6 +6012,7 @@ $('ai-practice-now').addEventListener('click', () => {
   practice.right = 0;
   practice.state = {};
   $('tabs').querySelector('[data-tab="bank"]').click();
+  $('bank-exam').style.display = 'none';
   $('bank-practice').style.display = 'block';
   $('bank-list-card').style.display = 'none';
   renderPractice();
