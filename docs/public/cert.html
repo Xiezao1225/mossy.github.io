@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>毕业证书 · 在线制作</title>
+<style>
+  *{ box-sizing: border-box; }
+
+  :root{
+    --gold:#b8945f;
+    --gold-light:#d9bd85;
+    --gold-dark:#8a6a35;
+    --paper:#fdfaf3;
+    --ink:#2c2418;
+    --seal:#c8362f;
+  }
+
+  html,body{ height:100%; }
+
+  body{
+    margin:0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    background:#0d1017;
+    color:#e8eaee;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* 背景光晕 */
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background:
+      radial-gradient(600px 400px at 15% 10%, rgba(184,148,95,.16), transparent 70%),
+      radial-gradient(700px 500px at 85% 90%, rgba(90,120,200,.12), transparent 70%);
+    pointer-events:none;
+    z-index:0;
+  }
+
+  .app{
+    position:relative;
+    z-index:1;
+    display:flex;
+    gap:30px;
+    align-items:flex-start;
+    max-width:1520px;
+    margin:0 auto;
+    padding:32px 28px 60px;
+  }
+
+  /* ---------- 左侧控制面板 ---------- */
+  .panel{
+    flex:none;
+    width:330px;
+    position:sticky;
+    top:32px;
+    padding:24px 22px;
+    border-radius:18px;
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.09);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow:0 20px 50px -25px rgba(0,0,0,.9);
+  }
+
+  .panel-title{
+    margin:0 0 4px;
+    font-size:17px;
+    font-weight:700;
+    letter-spacing:.06em;
+    background:linear-gradient(90deg,#e9d3a4,#b8945f);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+
+  .panel-sub{
+    margin:0 0 20px;
+    font-size:12px;
+    color:#7f8798;
+    letter-spacing:.04em;
+  }
+
+  .field{ display:block; margin-bottom:13px; }
+
+  .field > span{
+    display:block;
+    font-size:11.5px;
+    letter-spacing:.08em;
+    color:#8e96a8;
+    margin-bottom:6px;
+  }
+
+  .field input{
+    width:100%;
+    padding:10px 12px;
+    font-size:14px;
+    font-family:inherit;
+    color:#f2f4f8;
+    background:rgba(255,255,255,.05);
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:9px;
+    outline:none;
+    transition:.2s ease;
+  }
+
+  .field input::placeholder{ color:#5c6474; }
+
+  .field input:focus{
+    border-color:var(--gold);
+    background:rgba(184,148,95,.12);
+    box-shadow:0 0 0 3px rgba(184,148,95,.13);
+  }
+
+  .row{ display:flex; gap:10px; }
+  .row .field{ flex:1; }
+
+  .actions{ margin-top:22px; }
+
+  .btn{
+    display:block;
+    width:100%;
+    padding:13px;
+    font-size:14px;
+    font-family:inherit;
+    font-weight:700;
+    letter-spacing:.06em;
+    color:#1c1508;
+    background:linear-gradient(135deg,#e3c891,#b8945f 55%,#96733c);
+    border:none;
+    border-radius:11px;
+    cursor:pointer;
+    transition:.2s ease;
+    box-shadow:0 10px 24px -12px rgba(184,148,95,.9);
+  }
+
+  .btn:hover{ transform:translateY(-1px); filter:brightness(1.06); }
+  .btn:active{ transform:translateY(0); }
+
+  .btn.ghost{
+    margin-top:9px;
+    background:transparent;
+    border:1px solid rgba(255,255,255,.15);
+    color:#a8b0c0;
+    font-weight:500;
+    box-shadow:none;
+  }
+  .btn.ghost:hover{ border-color:rgba(255,255,255,.32); color:#e6eaf2; }
+
+  .tip{
+    margin:16px 0 0;
+    font-size:11.5px;
+    line-height:1.7;
+    color:#6b7385;
+  }
+
+  /* ---------- 右侧证书展示 ---------- */
+  .stage{
+    flex:1;
+    min-width:0;
+    display:flex;
+    justify-content:center;
+  }
+
+  .cert{
+    container-type: inline-size;
+    position:relative;
+    width:100%;
+    max-width:880px;
+    aspect-ratio: 1.414 / 1;
+    padding: 3cqw;
+    border-radius:5px;
+    background:
+      radial-gradient(120% 90% at 18% 8%, #ffffff 0%, rgba(255,255,255,0) 55%),
+      radial-gradient(100% 80% at 88% 100%, #f2e7d2 0%, rgba(255,255,255,0) 60%),
+      linear-gradient(150deg,#fffdf9 0%, #faf5ea 48%, #f2e9d8 100%);
+    box-shadow:
+      0 45px 90px -35px rgba(0,0,0,.85),
+      0 0 0 1px rgba(184,148,95,.4),
+      inset 0 0 90px rgba(184,148,95,.08);
+    animation: rise .8s cubic-bezier(.2,.8,.3,1) both;
+  }
+
+  @keyframes rise{
+    from{ opacity:0; transform: translateY(22px) scale(.985); }
+    to{ opacity:1; transform:none; }
+  }
+
+  .cert-frame{
+    position:relative;
+    width:100%;
+    height:100%;
+    padding: 2.2cqw 3.6cqw 1.8cqw;
+    border: 2px solid var(--gold);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-align:center;
+  }
+
+  .cert-frame::before{
+    content:"";
+    position:absolute;
+    inset:6px;
+    border:1px solid rgba(184,148,95,.5);
+    pointer-events:none;
+  }
+
+  /* 四角装饰 */
+  .corner{
+    position:absolute;
+    width:2.4cqw;
+    height:2.4cqw;
+    border:2px solid var(--gold);
+    opacity:.85;
+  }
+  .corner.tl{ top:14px; left:14px; border-right:0; border-bottom:0; }
+  .corner.tr{ top:14px; right:14px; border-left:0; border-bottom:0; }
+  .corner.bl{ bottom:14px; left:14px; border-right:0; border-top:0; }
+  .corner.br{ bottom:14px; right:14px; border-left:0; border-top:0; }
+
+  /* 校名 */
+  .school-top{
+    font-family:"Songti SC","STSong","SimSun","Noto Serif SC",serif;
+    font-size:2.5cqw;
+    letter-spacing:.34em;
+    text-indent:.34em;
+    font-weight:700;
+    color:var(--gold-dark);
+    margin-top:.5cqw;
+  }
+
+  .top-rule{
+    display:flex;
+    align-items:center;
+    gap:1cqw;
+    width:46%;
+    margin-top:1.1cqw;
+  }
+  .top-rule i{
+    flex:1;
+    height:1px;
+    background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  }
+  .top-rule b{
+    font-size:1cqw;
+    color:var(--gold);
+    font-weight:400;
+  }
+
+  /* 标题 */
+  .cert-title{
+    font-family:"Songti SC","STSong","SimSun","Noto Serif SC",serif;
+    font-size:6.6cqw;
+    line-height:1.16;
+    letter-spacing:.16em;
+    text-indent:.16em;
+    margin:1.4cqw 0 0;
+    font-weight:700;
+    background:linear-gradient(180deg,#dcc188 0%, #a8813f 55%, #7d5c2a 100%);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:#a8813f;
+    text-shadow:0 1px 0 rgba(255,255,255,.6);
+  }
+
+  .cert-title-en{
+    font-size:1.05cqw;
+    letter-spacing:.42em;
+    text-indent:.42em;
+    color:rgba(138,106,53,.72);
+    margin-top:.9cqw;
+    font-weight:600;
+  }
+
+  /* 正文 */
+  .cert-body{
+    flex:1;
+    width:100%;
+    display:flex;
+    align-items:center;
+    padding:0 1.6cqw;
+  }
+
+  .cert-text{
+    width:100%;
+    margin:0;
+    font-family:"Songti SC","STSong","SimSun","Noto Serif SC",serif;
+    font-size:1.82cqw;
+    line-height:2.75;
+    letter-spacing:.14em;
+    color:var(--ink);
+    text-align:justify;
+    text-indent:2em;
+  }
+
+  .cert-text em{
+    font-style:normal;
+    font-weight:700;
+    color:#1f1a10;
+    padding:0 .12em;
+    border-bottom:1px solid rgba(168,129,63,.55);
+  }
+
+  /* 落款 */
+  .cert-foot{
+    position:relative;
+    width:100%;
+    display:flex;
+    justify-content:flex-end;
+    padding-right:4cqw;
+    margin-top:.6cqw;
+  }
+
+  .sign-block{
+    position:relative;
+    z-index:3;
+    text-align:center;
+    font-family:"Songti SC","STSong","SimSun","Noto Serif SC",serif;
+    font-size:1.62cqw;
+    line-height:2.35;
+    letter-spacing:.12em;
+    color:#3a3122;
+  }
+
+  .sign-block em{
+    font-style:normal;
+    font-weight:700;
+    color:#1f1a10;
+  }
+
+  /* 印章 */
+  .seal{
+    position:absolute;
+    z-index:4;
+    right:1.5cqw;
+    bottom:-3.6cqw;
+    width:17.5cqw;
+    height:17.5cqw;
+    opacity:.86;
+    mix-blend-mode:multiply;
+    transform:rotate(-14deg);
+    pointer-events:none;
+    filter: blur(.2px);
+  }
+  .seal svg{ width:100%; height:100%; display:block; }
+
+  .seal-arc{
+    fill:var(--seal);
+    font-family:"Songti SC","STSong","SimSun",serif;
+    font-size:23px;
+    font-weight:700;
+    letter-spacing:3px;
+  }
+  .seal-bottom{
+    fill:var(--seal);
+    font-family:"Songti SC","STSong","SimSun",serif;
+    font-size:23px;
+    font-weight:700;
+    letter-spacing:2px;
+  }
+
+  /* 证书编号 */
+  .cert-no{
+    width:100%;
+    text-align:left;
+    margin-top:2.4cqw;
+    font-size:1.05cqw;
+    letter-spacing:.16em;
+    color:rgba(58,49,34,.62);
+    font-family:"Songti SC","STSong","SimSun",serif;
+    padding-left:1.5cqw;
+  }
+
+  /* ---------- 响应式 ---------- */
+  @media (max-width: 1080px){
+    .app{ flex-direction:column-reverse; padding:22px 16px 50px; gap:22px; }
+    .panel{ position:static; width:100%; }
+    .stage{ width:100%; }
+  }
+
+  /* ---------- 打印 ---------- */
+  @page{ size: A4 landscape; margin: 0; }
+
+  @media print{
+    body{ background:#fff; }
+    body::before{ display:none; }
+    .app{ display:block; padding:0; max-width:none; }
+    .panel{ display:none !important; }
+    .stage{ display:block; }
+    .cert{
+      max-width:none;
+      width:100%;
+      aspect-ratio: 1.414 / 1;
+      box-shadow:none;
+      border-radius:0;
+      animation:none;
+    }
+    .cert-text em{ border-bottom-color:transparent; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ========== 控制面板 ========== -->
+  <aside class="panel">
+    <h1 class="panel-title">毕业证书制作</h1>
+    <p class="panel-sub">修改下方内容，右侧证书实时更新</p>
+
+    <label class="field">
+      <span>学校名称</span>
+      <input type="text" id="in-school" data-target="out-school-top"
+             data-also="out-school-sign,seal-school" value="华东师范大学">
+    </label>
+
+    <label class="field">
+      <span>学生姓名</span>
+      <input type="text" id="in-name" data-target="out-name" value="张三">
+    </label>
+
+    <label class="field">
+      <span>性别</span>
+      <input type="text" id="in-gender" data-target="out-gender" value="男">
+    </label>
+
+    <label class="field">
+      <span>专业名称</span>
+      <input type="text" id="in-major" data-target="out-major" value="计算机科学与技术">
+    </label>
+
+    <div class="row">
+      <label class="field">
+        <span>入学时间</span>
+        <input type="text" id="in-start" data-target="out-start" value="2019年9月">
+      </label>
+      <label class="field">
+        <span>毕业时间</span>
+        <input type="text" id="in-end" data-target="out-end" value="2023年6月">
+      </label>
+    </div>
+
+    <label class="field">
+      <span>校长姓名</span>
+      <input type="text" id="in-principal" data-target="out-principal" value="李明">
+    </label>
+
+    <label class="field">
+      <span>发证日期</span>
+      <input type="text" id="in-date" data-target="out-date" value="2023年6月30日">
+    </label>
+
+    <label class="field">
+      <span>证书编号</span>
+      <input type="text" id="in-no" data-target="out-no" value="2023010001">
+    </label>
+
+    <div class="actions">
+      <button class="btn" id="btn-print">打印 / 导出 PDF</button>
+      <button class="btn ghost" id="btn-reset">恢复默认内容</button>
+    </div>
+
+    <p class="tip">提示：点击「打印 / 导出 PDF」后，在打印窗口中将目标选为「另存为 PDF」，纸张方向选择「横向」即可。</p>
+  </aside>
+
+  <!-- ========== 证书 ========== -->
+  <main class="stage">
+    <div class="cert">
+      <div class="cert-frame">
+        <span class="corner tl"></span>
+        <span class="corner tr"></span>
+        <span class="corner bl"></span>
+        <span class="corner br"></span>
+
+        <div class="school-top" id="out-school-top">华东师范大学</div>
+
+        <div class="top-rule"><i></i><b>❖</b><i></i></div>
+
+        <h1 class="cert-title">毕业证书</h1>
+        <div class="cert-title-en">CERTIFICATE OF GRADUATION</div>
+
+        <div class="cert-body">
+          <p class="cert-text">
+            兹有 <em id="out-name">张三</em> 同学，性别 <em id="out-gender">男</em>，
+            于 <em id="out-start">2019年9月</em> 至 <em id="out-end">2023年6月</em>，
+            在本校 <em id="out-major">计算机科学与技术</em> 专业学习，
+            修完教学计划规定的全部课程，成绩合格，准予毕业。
+          </p>
+        </div>
+
+        <div class="cert-foot">
+          <div class="sign-block">
+            <div>校长：<em id="out-principal">李明</em></div>
+            <div id="out-school-sign">华东师范大学</div>
+            <div id="out-date">2023年6月30日</div>
+          </div>
+
+          <div class="seal" aria-hidden="true">
+            <svg viewBox="0 0 200 200">
+              <defs>
+                <path id="sealArc" d="M 100 100 m -70 0 a 70 70 0 1 1 140 0" fill="none"/>
+              </defs>
+
+              <circle cx="100" cy="100" r="90" fill="none" stroke="#c8362f" stroke-width="5"/>
+              <circle cx="100" cy="100" r="82" fill="none" stroke="#c8362f" stroke-width="2"/>
+
+              <text class="seal-arc">
+                <textPath href="#sealArc" startOffset="50%" text-anchor="middle">
+                  <tspan id="seal-school">华东师范大学</tspan>
+                </textPath>
+              </text>
+
+              <polygon fill="#c8362f"
+                points="100,73 105.3,87.7 120.9,88.2 108.6,97.8 112.9,112.8
+                        100,104 87.1,112.8 91.4,97.8 79.1,88.2 94.7,87.7"/>
+
+              <text class="seal-bottom" x="100" y="148" text-anchor="middle">教务处</text>
+            </svg>
+          </div>
+        </div>
+
+        <div class="cert-no">证书编号：<span id="out-no">2023010001</span></div>
+      </div>
+    </div>
+  </main>
+
+</div>
+
+<script>
+(function () {
+  const inputs = Array.from(document.querySelectorAll('[data-target]'));
+
+  /* 记录初始值，用于「恢复默认」 */
+  const defaults = {};
+  inputs.forEach(el => { defaults[el.id] = el.value; });
+
+  /* 把输入框的值同步到所有关联节点 */
+  function sync(el) {
+    const ids = [el.dataset.target];
+    if (el.dataset.also) ids.push(...el.dataset.also.split(','));
+    ids.forEach(id => {
+      const node = document.getElementById(id.trim());
+      if (node) node.textContent = el.value || '　';
+    });
+  }
+
+  inputs.forEach(el => {
+    el.addEventListener('input', () => sync(el));
+    sync(el); // 初始化
+  });
+
+  /* 打印 */
+  document.getElementById('btn-print').addEventListener('click', () => window.print());
+
+  /* 恢复默认 */
+  document.getElementById('btn-reset').addEventListener('click', () => {
+    inputs.forEach(el => {
+      el.value = defaults[el.id];
+      sync(el);
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

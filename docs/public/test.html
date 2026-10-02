@@ -275,7 +275,7 @@ body {
 
 <div id="vignette"></div>
 <div id="eye-wrap">
-    <img src="../../resource/eye.webp" alt="" id="eye-img">
+    <img src="resource/eye.webp" alt="" id="eye-img">
 </div>
 <div id="meta"></div>
 <div id="hesit-line"></div>
@@ -316,7 +316,7 @@ body {
     </div>
 </div>
 
-<audio id="bgm" src="../../resource/began.mp3" preload="auto" loop></audio>
+<audio id="bgm" src="resource/began.mp3" preload="auto" loop></audio>
 
 <!-- 结果陷阱弹窗 -->
 <div id="trap-overlay">
@@ -949,7 +949,7 @@ function spawnQuickJumpscare(container, big) {
     } catch(e) {}
 
     const eye = document.createElement('img');
-    eye.src = '../../resource/eye2.webp';
+    eye.src = 'resource/eye2.webp';
     const w = big ? '100vw' : (30 + Math.random() * 40) + 'vw';
     const h = big ? '100vh' : (30 + Math.random() * 40) + 'vh';
     eye.style.cssText = `position:absolute;left:${10 + Math.random() * 70}%;top:${10 + Math.random() * 70}%;transform:translate(-50%,-50%) rotate(${Math.random() * 360}deg);width:${w};height:${h};object-fit:contain;z-index:9999;pointer-events:none;filter:${big ? 'brightness(1.8) contrast(1.5) hue-rotate(-30deg)' : 'invert(0.1)'};`;
@@ -1326,7 +1326,7 @@ function triggerMicroScare() {
         setTimeout(() => ctx.close(), 400);
     } catch(e) {}
 
-    const EYE_URL = '../../resource/eye2.webp';
+    const EYE_URL = 'resource/eye2.webp';
     const texts = ['它看到你了', '它看到你了', '看到你了', '👁'];
 
     // 随机位置（远离正中的边缘区域）
@@ -1439,7 +1439,7 @@ function triggerScreamScare() {
 
     // 眼睛瞬间贴脸（中间、极大）
     const eye = document.createElement('img');
-    eye.src = '../../resource/eye2.webp';
+    eye.src = 'resource/eye2.webp';
     eye.style.cssText = `position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(0.1);width:200vw;height:200vh;object-fit:contain;z-index:9700;pointer-events:none;filter:brightness(1.5) contrast(1.5) hue-rotate(-20deg);transition:transform 0.12s ease-out;`;
     document.body.appendChild(eye);
     requestAnimationFrame(() => { eye.style.transform = 'translate(-50%,-50%) scale(1)'; });
@@ -1473,7 +1473,7 @@ function triggerGiantEyeScare() {
 
     // 大眼睛从模糊聚焦到清晰
     const eye = document.createElement('img');
-    eye.src = '../../resource/eye2.webp';
+    eye.src = 'resource/eye2.webp';
     eye.style.cssText = `position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:100vw;height:100vh;object-fit:contain;z-index:9600;pointer-events:none;filter:blur(40px) brightness(0.3);transition:filter 1.2s ease;`;
     document.body.appendChild(eye);
     requestAnimationFrame(() => {
@@ -1513,7 +1513,7 @@ function triggerGlitchScare() {
     for (let i = 0; i < 5; i++) {
         setTimeout(() => {
             const eye = document.createElement('img');
-            eye.src = '../../resource/eye2.webp';
+            eye.src = 'resource/eye2.webp';
             const offX = (Math.random() - 0.5) * 100;
             const offY = (Math.random() - 0.5) * 100;
             eye.style.cssText = `position:fixed;left:calc(50% + ${offX}px);top:calc(50% + ${offY}px);transform:translate(-50%,-50%) skewX(${Math.random()*40-20}deg);width:60vw;height:60vh;object-fit:contain;z-index:9650;pointer-events:none;filter:invert(1) hue-rotate(${Math.random()*360}deg) contrast(1.5);`;
@@ -1594,7 +1594,7 @@ function triggerNightmareScare() {
 
     // 中央超大眼快速放大
     const eye = document.createElement('img');
-    eye.src = '../../resource/eye2.webp';
+    eye.src = 'resource/eye2.webp';
     eye.style.cssText = `position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(0.1);width:300vw;height:300vh;object-fit:contain;z-index:9700;pointer-events:none;filter:brightness(1.8) contrast(1.5) hue-rotate(-30deg);transition:transform 0.1s ease-out;`;
     document.body.appendChild(eye);
     requestAnimationFrame(() => { eye.style.transform = 'translate(-50%,-50%) scale(1)'; });
@@ -1626,7 +1626,7 @@ function stopScareCycle() {
 // ================================================================
 // 恐怖跳脸 5（鬼脸）：三张鬼脸图随机全屏突脸 + 尖叫
 // ================================================================
-const GHOST_FACES = ['../../resource/ghost1.jpeg', '../../resource/ghost2.jpg', '../../resource/ghost3.jpg'];
+const GHOST_FACES = ['resource/ghost1.jpeg', 'resource/ghost2.jpg', 'resource/ghost3.jpg'];
 
 function triggerGhostFaceScare() {
     // 随机选一张鬼脸

@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>心理健康自评</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; }
+html { -webkit-text-size-adjust:100%; }
+button { touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+body {
+  background:#fafafa;
+  color:#000;
+  font-family:'Songti SC','SimSun','Noto Serif SC','Microsoft YaHei',serif;
+  -webkit-font-smoothing:antialiased;
+  transition:background .8s;
+}
+.screen {
+  position:fixed; top:0; left:0; right:0; bottom:0;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:32px;
+}
+#quiz { cursor:none; }
+.hidden { display:none !important; }
+
+button {
+  font-family:inherit; cursor:pointer;
+}
+.btn {
+  background:transparent; color:#000;
+  border:1px solid #000;
+  padding:11px 42px;
+  font-size:15px; letter-spacing:4px;
+  transition:background .2s, color .2s;
+}
+.btn:hover { background:#000; color:#fff; }
+
+#consent h1 {
+  font-weight:600; letter-spacing:8px;
+  font-size:27px; margin-bottom:22px;
+  text-align:center;
+}
+#consent .warn {
+  font-size:13px; line-height:1.9; text-align:center;
+  max-width:420px; margin-bottom:10px;
+}
+#consent .tiny {
+  font-size:11px; color:#888; line-height:1.8; text-align:center;
+  max-width:420px; margin-bottom:34px;
+}
+#consent .actions { display:flex; gap:18px; }
+
+#progress {
+  position:fixed; top:16px; right:20px;
+  font-size:11px; color:#bbb; letter-spacing:2px;
+  user-select:none;
+}
+
+#qtext {
+  font-size:22px; line-height:2; text-align:center;
+  max-width:560px; margin:26px 0 30px;
+}
+#qtext .sub {
+  display:block; margin-top:22px;
+  font-size:12px; color:#a9a9a9; letter-spacing:1px;
+}
+#options { width:340px; max-width:92vw; }
+.opt {
+  display:block; width:100%;
+  border:1px solid #000; margin:11px 0;
+  padding:13px 18px; font-size:15px;
+  background:transparent; color:#000; text-align:center;
+  transition:background .18s, color .18s;
+  touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+}
+@media (max-width:640px) {
+  .screen { padding:20px; justify-content:flex-start; padding-top:72px; overflow-y:auto; }
+  #qtext { font-size:19px; line-height:1.9; margin:14px 0 20px; }
+  .opt { padding:16px 14px; font-size:16px; }
+  .btn { padding:12px 34px; }
+  #progress { top:12px; right:14px; }
+  #scare .big { font-size:26px; }
+}
+.opt:hover, .opt.sel { background:#000; color:#fff; }
+#next {
+  margin-top:28px; padding:10px 44px;
+}
+#next:disabled { opacity:.25; cursor:default; }
+#next:disabled:hover { background:transparent; color:#000; }
+
+.cl-line {
+  font-size:20px; font-weight:600;
+  line-height:1.55; text-align:center;
+  white-space:pre; user-select:none;
+}
+
+#scare { background:#000; color:#fff; overflow:hidden; }
+#scare .big {
+  font-size:34px; letter-spacing:6px;
+  text-align:center; line-height:1.8;
+}
+#scare.flash { filter:invert(1); }
+.noise-line { white-space:nowrap; line-height:1.1; user-select:none; color:#fff; }
+
+#blank .cursor {
+  display:inline-block; width:2px; height:26px;
+  background:#000; animation:blink 1s step-end infinite;
+}
+@keyframes blink { 50% { opacity:0; } }
+
+#red { background:#000; }
+#red .red {
+  color:#c00; font-size:24px; letter-spacing:10px; text-align:center;
+}
+#red .tiny {
+  margin-top:26px; font-size:11px; color:#555; letter-spacing:2px;
+}
+
+#watchLayer {
+  position:fixed; top:0; left:0; right:0; bottom:0;
+  background:rgba(0,0,0,0.72); z-index:99;
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none; transition:opacity .35s;
+}
+#watchLayer.on { opacity:1; pointer-events:none; }
+#watchLayer img {
+  width:150px; height:150px; object-fit:cover;
+  border-radius:50%; mix-blend-mode:screen;
+  animation:eyeGlow 1.2s ease-in-out infinite alternate;
+}
+@keyframes eyeGlow {
+  from { filter:brightness(.9) saturate(1); }
+  to { filter:brightness(1.6) saturate(1.5); }
+}
+
+#fauxDeath {
+  position:fixed; top:0; left:0; right:0; bottom:0;
+  background:#fff; z-index:98; display:flex;
+  align-items:center; justify-content:center; opacity:0;
+  pointer-events:none; transition:opacity .1s;
+}
+#fauxDeath.on { opacity:1; }
+#fauxDeath .fd-line {
+  color:#000; font-size:15px; letter-spacing:3px;
+  animation:blink 1.2s step-end infinite;
+}
+
+#reportBox {
+  margin-top:22px; padding:16px 20px;
+  border:1px solid #000; max-width:420px;
+  font-size:13px; line-height:2; text-align:center;
+  background:#fff;
+}
+#reportBox .r-line { letter-spacing:1px; }
+#reportBox .r-warn { color:#a00; font-weight:600; letter-spacing:3px; }
+
+body.skip-shake { transform:translateX(2px); }
+body.skew-shake { animation:skewJitter .3s ease-out; }
+@keyframes skewJitter {
+  0% { transform:translate(0,0) skewX(0); }
+  25% { transform:translate(-2px,0) skewX(.4deg); }
+  50% { transform:translate(2px,1px) skewX(-.6deg); }
+  75% { transform:translate(-1px,0) skewX(.3deg); }
+  100% { transform:translate(0,0) skewX(0); }
+}
+
+.opt-dodge { transition:transform .12s ease-out; }
+.opt.ghosted { border-color:#d0d0d0; color:#d0d0d0; transition:border-color .12s, color .12s, transform .12s ease-out; }
+
+
+
+#qtext .swap-flash { color:#900; }
+#qtext .swap-note { color:#a00; }
+
+#qtyWrap { margin-top:16px; text-align:center; }
+#qtyWrap input {
+  font-family:inherit; font-size:15px; text-align:center;
+  border:1px solid #000; padding:10px 14px; width:240px; max-width:80vw;
+  border-radius:0; outline:none;
+}
+#qtyWrap .dismissed { color:#a00; font-size:13px; letter-spacing:3px; margin-top:10px; }
+
+#blackFlash {
+  position:fixed; inset:0; background:#000; z-index:97;
+  display:flex; align-items:center; justify-content:center;
+  opacity:0; pointer-events:none;
+}
+#blackFlash.on { opacity:1; }
+#blackFlash span { color:#fff; font-size:26px; letter-spacing:8px; white-space:pre; }
+</style>
+</head>
+<body>
+
+<div id="consent" class="screen">
+  <h1>心理健康自评</h1>
+  <p class="warn">本问卷用于心理状况的简易自查，请如实作答。</p>
+  <p class="tiny">
+    包含强烈的心理压迫内容、异常文字与声音刺激。<br>
+    未成年人与心理状态脆弱者请勿参与。<br>
+    如感到任何不适，可按 Esc 随时退出。
+  </p>
+  <div class="actions">
+    <button id="startBtn" class="btn">开始作答</button>
+    <button id="exitBtn" class="btn">退出</button>
+  </div>
+</div>
+
+<div id="progress" class="hidden"></div>
+
+<div id="quiz" class="screen hidden">
+  <div id="qtext"></div>
+  <div id="options"></div>
+  <button id="next" class="btn" disabled>下一题</button>
+</div>
+
+<div id="blank" class="screen hidden">
+  <span class="cursor"></span>
+</div>
+
+<div id="climax" class="screen hidden"></div>
+
+<div id="scare" class="screen hidden"></div>
+
+<div id="red" class="screen hidden"></div>
+
+<div id="watchLayer"><img src="resource/eye.webp" alt=""></div>
+<div id="fauxDeath"><span class="fd-line">系统无响应</span></div>
+
+<div id="blackFlash"><span>■■■■</span></div>
+
+<script>
+(function () {
+'use strict';
+
+var QUESTIONS = [
+  { t: '过去两周，你是否感到情绪低落、沮丧或绝望？' },
+  { t: '过去两周，你是否对平时喜欢的事情失去兴趣或乐趣？' },
+  { t: '过去两周，你是否感到疲倦或没有活力？' },
+  { t: '过去两周，你是否入睡困难、睡不安稳或睡得过多？' },
+
+  { t: '上帝是否存在？' },
+  { t: '你是否觉得，周围的声音偶尔会变得很远？' },
+  { t: '有时候，你会不会感觉自己站在自己身后？' },
+  { t: '你有没有觉得，镜子里那个人动作比你慢半拍？' },
+
+  { t: '你是否感到 有 时 候 自己 不 是 自己？' },
+  { t: '有 人 在 叫 你 的 名 字 你 会 回 头 吗？' },
+  { t: '有人叫你的名字但房间里没有人你会回头吗' },
+  { t: '你说 你 没有 听到 但 你 回头了' },
+
+  { t: '你是否感到 忈 或 惢 在你身后？' },
+  { t: '你是否感到 ██ 在你身后？' },
+  { t: '你是否感到有 人 在 你 身 后？' },
+  { t: '后身在 你 到 感 否 是 你？' },
+
+  { t: '你有没有注意到，刚才有 0.3 秒你没有呼吸？' },
+  { t: '你有没有觉得，你的名字被叫过一次？' },
+  { t: '你是否愿意留下你的联系方式？' },
+  { t: '你确定，现在坐在屏幕前的是你吗？' },
+
+  { t: '如果这些问题不是写给你的，你还会回答吗？' },
+  { t: '如果没有人看，你还会回答吗？' },
+  { t: '', blank: true, blankSec: 10 },
+  { t: '你可以关掉了。' }
+];
+
+var QUESTION_OPTIONS = [
+  ['完全没有', '有几天', '一半以上天数', '几乎每天'],
+  ['完全没有', '有几天', '一半以上天数', '几乎每天'],
+  ['完全没有', '有几天', '一半以上天数', '几乎每天'],
+  ['完全没有', '有几天', '一半以上天数', '几乎每天'],
+  ['存在', '不存在', '也许存在', '它在'],
+  ['从来没有', '偶尔', '经常', '现在也是'],
+  ['从来没有', '偶尔', '经常', '现在也是'],
+  ['从来没有', '偶尔', '经常', '现在也是'],
+  ['从来没有', '有时候', '经常', '现在也是'],
+  ['不会', '也许会', '会', '你已经回了'],
+  ['不会回头', '也许会回头', '会回头', '你已经回了'],
+  ['我没有回头', '我回头了', '你怎么知道', '……'],
+  ['没有', '只是余光', '我看不到后面', '它一直在'],
+  ['没有', '好像有', '它一直在', '你看见了什么'],
+  ['没有人', '也许有人', '有人', '有个人一直在我身后'],
+  ['否', '也许吧', '是', '你转过去看看'],
+  ['没有', '有', '你怎么知道', '别说了'],
+  ['没有', '有', '你怎么知道', '别说了'],
+  ['愿意', '不愿意', '也许吧', '我不想回答'],
+  ['没有', '有一点', '你做了什么', '别说了'],
+  ['是我', '不确定', '不是我', '你希望是谁'],
+  ['会', '不会', '也许吧', '我不想回答'],
+  ['会', '不会', '也许吧', '我不想回答'],
+  null,
+  null
+];
+
+var data = {
+  questions: [], // {index, enterTime, duration, hoverTime, answerChanges}
+  tabSwitches: [], // {leaveTime, returnTime, duration}
+  clickIntervals: [],
+  permissions: { microphone: null, notification: null }
+};
+
+var WAVES = [
+  { text: '我不想在这了', count: 30 },
+  { text: '我想死', count: 12 },
+  { text: '死死死死死死死死死死死死死死死死死', count: 1 },
+  { text: '冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤冤', count: 1 }
+];
+
+var state = {
+  idx: 0,
+  hasInteracted: false,
+  selected: -1,
+  answerChanges: 0,
+  lastClickAt: 0,
+  hoverStart: 0,
+  entering: 0,
+  climaxMode: false,
+  skipClimax: false,
+  notified: false,
+  returnCount: 1,
+  repeatId: 0,
+  speech: 'tts',
+  timers: []
+};
+
+var ctx = null, masterGain = null, lowpass = null, shaper = null;
+var bgmGain = null, bgmSrc = null, mp3Buf = null;
+var lowOsc = null, lowOscGain = null;
+var buzzOsc = null, buzzGain = null;
+var heartOsc = null, heartGain = null, heartTimer = 0, heartbeatBpm = 0;
+var pitchLfo = null, pitchLfoGain = null;
+var dissonanceOsc = null, dissonanceGain = null;
+var whisperDelay = null;
+var dodgeTarget = null;
+var hiddenAt = 0, bgmRateStored = 1;
+
+var SCREENS = ['consent', 'quiz', 'blank', 'climax', 'scare', 'red', 'fauxDeath'];
+
+function $(id) { return document.getElementById(id); }
+
+function show(name) {
+  SCREENS.forEach(function (s) { $(s).classList.add('hidden'); });
+  $(name).classList.remove('hidden');
+}
+
+function fmt(ms) { return (ms / 1000).toFixed(1); }
+
+function setT(fn, ms) {
+  var id = setTimeout(function () {
+    state.timers.splice(state.timers.indexOf(id), 1);
+    fn();
+  }, ms);
+  state.timers.push(id);
+  return id;
+}
+
+function clearTimers() {
+  state.timers.forEach(function (id) { clearTimeout(id); });
+  state.timers = [];
+}
+
+function recordClick() {
+  var now = Date.now();
+  if (state.lastClickAt) {
+    data.clickIntervals.push({ from: state.lastClickAt, to: now, interval: now - state.lastClickAt });
+  }
+  state.lastClickAt = now;
+}
+
+for (var qi = 0; qi < 24; qi++) {
+  data.questions.push({ index: qi, enterTime: 0, duration: 0, hoverTime: 0, answerChanges: 0, answer: -1 });
+}
+
+function probeSpeech(cb) {
+  if (!('speechSynthesis' in window)) { cb(false); return; }
+  var V = window.speechSynthesis;
+  var resolved = false;
+  function done(ok) { if (!resolved) { resolved = true; cb(ok); } }
+  try {
+    var voices = (V.getVoices ? V.getVoices() : []);
+    if (voices.length) { done(true); return; }
+  } catch (e) {}
+  try {
+    var u = new SpeechSynthesisUtterance(' ');
+    u.onstart = function () { done(true); };
+    u.onend = function () { done(true); };
+    u.onerror = function () {};
+    V.speak(u);
+  } catch (e) {}
+  if (V.addEventListener) {
+    var h = function () {
+      try {
+        if (V.getVoices && V.getVoices().length) {
+          if (V.removeEventListener) V.removeEventListener('voiceschanged', h);
+          done(true);
+        }
+      } catch (e) {}
+    };
+    V.addEventListener('voiceschanged', h);
+  }
+  setT(function () { done(false); }, 800);
+}
+
+var VOICE_FALLBACK = {
+  '陪陪我吧': 'resource/voice/peipeiwo.mp3',
+  '我好孤独': 'resource/voice/haogudu.mp3',
+  '我不想在这了': 'resource/voice/buxiang.mp3'
+};
+var voicePlayers = {};
+
+function playVoiceMp3(text, rate) {
+  var src = VOICE_FALLBACK[text] || 'resource/voice/heng.mp3';
+  var a = voicePlayers[src];
+  if (!a) {
+    a = new Audio(src);
+    a.preload = 'auto';
+    a.volume = 0.9;
+    voicePlayers[src] = a;
+  }
+  try {
+    a.currentTime = 0;
+    if (rate) a.playbackRate = Math.max(0.5, Math.min(1.4, rate));
+    var p = a.play();
+    if (p && p['catch']) p['catch'](function () {});
+  } catch (e) {}
+  return a;
+}
+
+function speakData(text, pitch, rate) {
+  if (state.speech === 'mp3') { playVoiceMp3(text, rate); return; }
+  if (!('speechSynthesis' in window)) return;
+  var u = new SpeechSynthesisUtterance(text);
+  var basePitch = (pitch === undefined) ? 0.2 : pitch;
+  u.pitch = basePitch + (Math.random() - 0.5) * 0.15;
+  u.rate = (rate === undefined) ? 0.5 : rate;
+  u.volume = 0.9;
+  u.lang = 'zh-CN';
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(u);
+}
+
+function escalatingSpeak(text, count) {
+  var i = 0;
+  function play() {
+    if (i >= count || state.skipClimax) return;
+    speakData(text, 0.3 + i * 0.18, 0.7 + i * 0.45);
+    i++;
+    setT(play, Math.max(400, 1400 - i * 200));
+  }
+  play();
+}
+
+function makeDistortionCurve(k) {
+  var n = 44100, curve = new Float32Array(n);
+  for (var i = 0; i < n; i++) {
+    var x = i * 2 / n - 1;
+    curve[i] = (3 + k) * x * 20 * Math.PI / 180 / (Math.PI + k * Math.abs(x));
+  }
+  return curve;
+}
+
+function initAudio() {
+  var AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC || ctx) return;
+  ctx = new AC();
+
+  masterGain = ctx.createGain();
+  masterGain.gain.value = 0.5;
+  masterGain.connect(ctx.destination);
+
+  whisperDelay = ctx.createDelay(1.0);
+  whisperDelay.delayTime.value = 0.4;
+  var whisperFb = ctx.createGain();
+  whisperFb.gain.value = 0.35;
+  whisperDelay.connect(whisperFb);
+  whisperFb.connect(whisperDelay);
+  whisperDelay.connect(masterGain);
+
+  lowpass = ctx.createBiquadFilter();
+  lowpass.type = 'lowpass';
+  lowpass.frequency.value = 800;
+
+  shaper = ctx.createWaveShaper();
+  shaper.curve = makeDistortionCurve(28);
+  lowpass.connect(shaper);
+
+  bgmGain = ctx.createGain();
+  bgmGain.gain.value = 0;
+  shaper.connect(bgmGain);
+  bgmGain.connect(masterGain);
+
+  lowOscGain = ctx.createGain();
+  lowOscGain.gain.value = 0;
+  lowOscGain.connect(lowpass);
+
+  lowOsc = ctx.createOscillator();
+  lowOsc.type = 'sine';
+  lowOsc.frequency.value = 55;
+  lowOsc.connect(lowOscGain);
+  lowOsc.start();
+
+  pitchLfo = ctx.createOscillator();
+  pitchLfo.type = 'sine';
+  pitchLfo.frequency.value = 0.15;
+  pitchLfoGain = ctx.createGain();
+  pitchLfoGain.gain.value = 0.025;
+  pitchLfo.connect(pitchLfoGain);
+  pitchLfo.start();
+
+  dissonanceOsc = ctx.createOscillator();
+  dissonanceOsc.type = 'sine';
+  dissonanceOsc.frequency.value = 58;
+  dissonanceGain = ctx.createGain();
+  dissonanceGain.gain.value = 0;
+  dissonanceOsc.connect(dissonanceGain);
+  dissonanceGain.connect(lowpass);
+  dissonanceOsc.start();
+
+  resumeCtx();
+
+  try {
+    fetch('resource/began.mp3')
+      .then(function (r) {
+        if (!r.ok) throw new Error('fetch failed');
+        return r.arrayBuffer();
+      })
+      .then(function (buf) { return ctx.decodeAudioData(buf); })
+      .then(function (decoded) { mp3Buf = decoded; })
+      ['catch'](function () { mp3Buf = null; });
+  } catch (e) { mp3Buf = null; }
+}
+
+function resumeCtx() {
+  if (!ctx) return;
+  if (ctx.state !== 'running') {
+    try {
+      var p = ctx.resume();
+      if (p && p['catch']) p['catch'](function () {});
+    } catch (e) {}
+  }
+}
+
+var WHISPER_LIST = ['resource/voice/whisper1.mp3','resource/voice/whisper2.mp3','resource/voice/whisper3.mp3','resource/voice/whisper4.mp3','resource/voice/whisper5.mp3'];
+var whisperTimer = null;
+
+function playRandomWhisper() {
+  if (!ctx) return;
+  var url = WHISPER_LIST[Math.floor(Math.random() * WHISPER_LIST.length)];
+  fetch(url).then(function (r) { return r.arrayBuffer(); })
+    .then(function (ab) { return ctx.decodeAudioData(ab); })
+    .then(function (buf) {
+      var src = ctx.createBufferSource();
+      src.buffer = buf;
+      var g = ctx.createGain();
+      g.gain.value = 0.18 + Math.random() * 0.12;
+      src.connect(g);
+      if (whisperDelay) {
+        g.connect(whisperDelay);
+      } else {
+        g.connect(masterGain);
+      }
+      src.start();
+    })['catch'](function () {});
+}
+
+function scheduleRandomWhispers() {
+  if (whisperTimer) clearTimeout(whisperTimer);
+  var next = 8000 + Math.random() * 18000;
+  whisperTimer = setTimeout(function () {
+    if (!state.hasInteracted || state.idx >= 22) return;
+    playRandomWhisper();
+    scheduleRandomWhispers();
+  }, next);
+}
+
+function cursorJitter() {
+  var el = document.documentElement;
+  var dx = (Math.random() - 0.5) * 6;
+  var dy = (Math.random() - 0.5) * 6;
+  el.style.cursor = 'none';
+  document.body.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+  setTimeout(function () {
+    document.body.style.transform = '';
+    el.style.cursor = '';
+  }, 100);
+}
+
+function scheduleCursorJitter() {
+  setT(function () {
+    if (!state.hasInteracted || state.idx >= 22) return;
+    if (Math.random() < 0.4) cursorJitter();
+    scheduleCursorJitter();
+  }, 5000 + Math.random() * 12000);
+}
+
+var TITLE_ORIG = '心理健康自评';
+var TITLE_GLITCHES = ['你在看什么','别回头','我在这里','你一个人吗','你在听吗','不要停','你确定吗','你能离开吗'];
+var titleTimer = null;
+
+function initTitleGlitch() {
+  if (titleTimer) clearInterval(titleTimer);
+  var cycle = 0;
+  titleTimer = setInterval(function () {
+    if (!state.hasInteracted) return;
+    if (state.idx >= 22) { document.title = TITLE_ORIG; clearInterval(titleTimer); return; }
+    if (Math.random() < 0.35) {
+      document.title = TITLE_GLITCHES[Math.floor(Math.random() * TITLE_GLITCHES.length)];
+      cycle++;
+      if (cycle >= 3) {
+        setTimeout(function () { document.title = TITLE_ORIG; }, 600);
+        cycle = 0;
+      }
+    }
+  }, 4000);
+}
+
+function setBgm(mode) {
+  if (!ctx) return;
+  resumeCtx();
+  if (bgmSrc) { try { bgmSrc.stop(); } catch (e) {} bgmSrc = null; }
+  var rate = 1, ramp = false;
+  if (mode === 'weak') {
+    bgmGain.gain.value = 0.4;
+    lowpass.frequency.value = 800;
+    lowOscGain.gain.value = 0.12;
+  } else if (mode === 'broken') {
+    bgmGain.gain.value = 0.48;
+    lowpass.frequency.value = 900;
+    lowOscGain.gain.value = 0.16;
+    rate = 0.85;
+  } else if (mode === 'urgent') {
+    bgmGain.gain.value = 0.55;
+    lowpass.frequency.value = 750;
+    lowOscGain.gain.value = 0.2;
+    rate = 0.82;
+  } else if (mode === 'full') {
+    bgmGain.gain.value = 0.72;
+    lowpass.frequency.value = 600;
+    lowOscGain.gain.value = 0.24;
+    rate = 0.7;
+  } else {
+    bgmGain.gain.value = 0;
+    lowOscGain.gain.value = 0;
+    return;
+  }
+
+  lowOsc.frequency.value = (mode === 'full') ? 45 : 55;
+
+  if (mp3Buf) {
+    bgmSrc = ctx.createBufferSource();
+    bgmSrc.buffer = mp3Buf;
+    bgmSrc.loop = true;
+
+    if (mode === 'broken') {
+      var sr = ctx.sampleRate;
+      var off = Math.min(Math.floor(sr * 2), Math.floor(sr * mp3Buf.duration * 0.4));
+      var len = Math.floor(sr * 0.5);
+      if (len > 0 && off + len <= mp3Buf.length) {
+        var frag = ctx.createBuffer(mp3Buf.numberOfChannels, len, sr);
+        for (var ch = 0; ch < mp3Buf.numberOfChannels; ch++) {
+          var src = mp3Buf.getChannelData(ch);
+          var dst = frag.getChannelData(ch);
+          for (var i = 0; i < len; i++) dst[i] = src[off + i];
+        }
+        bgmSrc.buffer = frag;
+        bgmSrc.loop = true;
+      }
+    }
+
+    var t = ctx.currentTime;
+    if (ramp) {
+      bgmSrc.playbackRate.setValueAtTime(1.0, t);
+      bgmSrc.playbackRate.linearRampToValueAtTime(1.5, t + 12);
+    } else {
+      bgmSrc.playbackRate.value = rate;
+    }
+    bgmSrc.connect(lowpass);
+    pitchLfoGain.connect(bgmSrc.playbackRate);
+    dissonanceGain.gain.value = (mode === 'full') ? 0.08 : (mode === 'urgent') ? 0.05 : 0.03;
+    bgmSrc.start(0);
+  }
+}
+
+function startBuzz(freq) {
+  if (!ctx) return;
+  if (!buzzOsc) {
+    buzzOsc = ctx.createOscillator();
+    buzzOsc.type = 'sine';
+    buzzGain = ctx.createGain();
+    buzzGain.gain.value = 0;
+    buzzOsc.connect(buzzGain);
+    buzzGain.connect(masterGain);
+    buzzOsc.start();
+  }
+  buzzOsc.frequency.value = freq;
+  buzzGain.gain.value = 0.16;
+}
+
+function stopBuzz() { if (buzzGain) buzzGain.gain.value = 0; }
+
+function scareBurst() {
+  if (!ctx) return;
+  var sr = ctx.sampleRate, len = Math.floor(sr * 0.25);
+  var buf = ctx.createBuffer(1, len, sr), d = buf.getChannelData(0);
+  for (var i = 0; i < len; i++) {
+    var p = i / len;
+    var f = 400 - 300 * p;
+    d[i] = Math.sin(2 * Math.PI * f * i / sr) * 0.5 + (Math.random() * 2 - 1) * 0.3 * (1 - p);
+  }
+  var src = ctx.createBufferSource();
+  src.buffer = buf;
+  var g = ctx.createGain();
+  g.gain.value = 0.45;
+  src.connect(g);
+  g.connect(ctx.destination);
+  src.start();
+}
+
+function humanRoar() {
+  if (!ctx) return;
+  var sr = ctx.sampleRate, dur = 0.5, len = Math.floor(sr * dur);
+  var buf = ctx.createBuffer(1, len, sr), d = buf.getChannelData(0);
+  var t0 = ctx.currentTime + 0.03;
+  var phase = 0;
+  for (var i = 0; i < len; i++) {
+    var t = i / sr;
+    var p = i / len;
+    var f = 140 + 420 * p;
+    f += Math.sin(2 * Math.PI * 27 * t) * 45;
+    phase += 2 * Math.PI * f / sr;
+    var vibr = Math.sin(phase);
+    var harsh = (Math.random() * 2 - 1) * (0.5 * p + 0.25);
+    var growl = Math.sin(2 * Math.PI * (55 + 35 * p) * t) * 0.5;
+    var v = vibr * 0.72 + growl * 0.5 + harsh * (0.85 - 0.4 * p);
+    v = Math.tanh(v * 2.2);
+    var env = Math.min(1, p / 0.04) * (1 - (p > 0.7 ? (p - 0.7) / 0.3 : 0)) * 0.9;
+    d[i] = v * env;
+  }
+  var src = ctx.createBufferSource();
+  src.buffer = buf;
+  var g = ctx.createGain();
+  g.gain.value = 0.6;
+  src.connect(g);
+  g.connect(ctx.destination);
+  src.start(t0);
+}
+
+function initHeart() {
+  if (!ctx || heartGain) return;
+  heartGain = ctx.createGain();
+  heartGain.gain.value = 0;
+  heartGain.connect(masterGain || ctx.destination);
+  heartOsc = ctx.createOscillator();
+  heartOsc.type = 'sine';
+  heartOsc.frequency.value = 55;
+  heartOsc.connect(heartGain);
+  heartOsc.start();
+}
+
+function thump(when) {
+  if (!ctx || !heartOsc || !heartGain) return;
+  var t = when;
+  heartOsc.frequency.setValueAtTime(58, t);
+  heartOsc.frequency.linearRampToValueAtTime(40, t + 0.11);
+  heartGain.gain.setValueAtTime(0, t);
+  heartGain.gain.linearRampToValueAtTime(0.34, t + 0.012);
+  heartGain.gain.linearRampToValueAtTime(0.0001, t + 0.11);
+}
+
+function startHeart(bpm) {
+  initHeart();
+  if (!heartGain) return;
+  heartbeatBpm = bpm;
+  if (heartTimer) clearTimeout(heartTimer);
+  var iv = 60000 / bpm;
+  function loop() {
+    if (!heartGain) return;
+    var now = ctx.currentTime;
+    thump(now);
+    thump(now + 0.24);
+    heartTimer = setTimeout(loop, iv);
+  }
+  heartTimer = setTimeout(loop, 300);
+}
+
+function stopHeart() {
+  if (heartTimer) { clearTimeout(heartTimer); heartTimer = 0; }
+  if (heartGain) heartGain.gain.value = 0;
+}
+
+function heartBpmFor(i) {
+  var avgSpeed = 0, n = 0;
+  for (var j = Math.max(0, i - 4); j < i; j++) {
+    if (data.questions[j].duration) {
+      avgSpeed += data.questions[j].duration;
+      n++;
+    }
+  }
+  if (n) avgSpeed = avgSpeed / n;
+  if (avgSpeed < 1000) return 130;
+  if (avgSpeed < 2000) return 110;
+  if (avgSpeed < 4000) return 90;
+  return 72;
+}
+
+function slowBgm() {
+  if (bgmSrc && bgmSrc.playbackRate) {
+    bgmRateStored = bgmSrc.playbackRate.value || 1;
+    bgmSrc.playbackRate.value = Math.max(0.4, bgmRateStored * 0.8);
+  }
+}
+
+function restoreBgm() {
+  if (bgmSrc && bgmSrc.playbackRate) {
+    bgmSrc.playbackRate.value = bgmRateStored || 1;
+  }
+}
+
+function refillOptionHover(i) {
+  if (state.hoverStart) {
+    data.questions[i].hoverTime += Date.now() - state.hoverStart;
+    state.hoverStart = 0;
+  }
+}
+
+function updateProgress() {
+  $('progress').textContent = state.idx + ' / 24';
+}
+
+function applyStage(i) {
+  var b = document.body;
+  if (i === 4) {
+    b.style.background = '#f7f7f7';
+    $('progress').classList.remove('hidden');
+    updateProgress();
+    setBgm('weak');
+  } else if (i === 8) {
+    b.style.background = '#f5f5f5';
+    setBgm('broken');
+  } else if (i === 12) {
+    b.style.background = '#f3f3f3';
+    setBgm('urgent');
+    startBuzz(35);
+    startHeart(heartBpmFor(12));
+  } else if (i === 16) {
+    b.style.background = '#f0f0f0';
+    startHeart(heartBpmFor(16));
+  } else if (i === 20) {
+    setBgm('full');
+    startBuzz(25);
+    startHeart(heartBpmFor(20));
+  } else if (i === 22) {
+    if (ctx && ctx.state === 'running') { ctx.suspend(); }
+    stopBuzz();
+    stopHeart();
+    if (bgmSrc) { try { bgmSrc.stop(); } catch (e) {} bgmSrc = null; }
+  }
+}
+
+function sub17() {
+  var d = data.questions[13].duration;
+  var avg = 1400;
+  var diff = d > avg ? '慢了 ' + fmt(d - avg) + ' 秒' : '快了 ' + fmt(avg - d) + ' 秒';
+  return '第14题 你用了 ' + fmt(d) + ' 秒。平均用时 1.4 秒。你' + diff + '。';
+}
+function sub18() {
+  var r = data.questions[10];
+  var avg = 3;
+  var core = '第11题 你改动了 ' + r.answerChanges + ' 次。平均 3 次。';
+  return r.answerChanges > avg ? core + '你比别人犹豫。' : core + '你比别人果断。';
+}
+function sub19() {
+  var n = data.tabSwitches.length, sum = 0, i;
+  for (i = 0; i < n; i++) sum += data.tabSwitches[i].duration;
+  return '你切走了 ' + n + ' 次，共 ' + fmt(sum) + ' 秒。没有人切走这么多次。';
+}
+function sub20() {
+  var dur = data.questions[18].duration;
+  return '第19题 你用了 ' + fmt(dur) + ' 秒。' + (dur < 900 ? '你甚至没有犹豫。' : '你犹豫了。别人都很快。');
+}
+
+function renderOptions(i, usedOpts) {
+  var box = $('options');
+  box.innerHTML = '';
+  var opts = usedOpts || QUESTION_OPTIONS[i];
+  opts.forEach(function (text, k) {
+    var b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = text;
+    b.addEventListener('pointerdown', function () {
+      if (!state.hoverStart) state.hoverStart = Date.now();
+    });
+    b.addEventListener('pointerup', function () {
+      refillOptionHover(state.idx);
+    });
+    b.addEventListener('pointercancel', function () {
+      refillOptionHover(state.idx);
+    });
+    b.addEventListener('focus', function () {
+      if (!state.hoverStart) state.hoverStart = Date.now();
+    });
+    b.addEventListener('blur', function () {
+      refillOptionHover(state.idx);
+    });
+    b.addEventListener('mouseenter', function () {
+      if (!state.hoverStart) state.hoverStart = Date.now();
+      if (i === 9 && Math.random() < 0.55) dodgeOption(b);
+    });
+    b.addEventListener('mouseleave', function () {
+      refillOptionHover(state.idx);
+      if (b._ghosting) { b._ghosting = false; b.classList.remove('ghosted'); }
+    });
+    b.addEventListener('click', function () {
+      var sels = box.querySelectorAll('.opt.sel');
+      if (state.selected === k) {
+        state.selected = -1;
+        state.answerChanges++;
+      } else {
+        if (state.selected !== -1) state.answerChanges++;
+        state.selected = k;
+      }
+      for (var m = 0; m < sels.length; m++) sels[m].classList.remove('sel');
+      if (state.selected !== -1) b.classList.add('sel');
+      $('next').disabled = (state.selected === -1);
+      recordClick();
+    });
+    box.appendChild(b);
+  });
+  if (i >= 4 && i <= 21) maybeBlackFlash();
+}
+
+function dodgeOption(b) {
+  var prev = b.style.transform;
+  var amount = (Math.random() < 0.5 ? -1 : 1) * (10 + Math.random() * 14);
+  var dir = Math.random() < 0.5 ? 'translateX' : 'translateY';
+  b.style.transform = dir + '(' + amount + 'px)';
+  b.classList.add('ghosted');
+  b._ghosting = true;
+  setTimeout(function () {
+    b.style.transform = prev;
+    b._ghosting = false;
+    b.classList.remove('ghosted');
+  }, 300);
+}
+
+var cq = { count: 0, phase: 0 };
+
+function bindContactQuestion() {
+  var box = $('options');
+  var btns = box.querySelectorAll('.opt');
+  cq.count = 0;
+  cq.phase = 0;
+  btns.forEach(function (b, k) {
+    b.addEventListener('click', function () {
+      if (cq.phase === 1) return;
+      if (k === 0) {
+        cq.phase = 1;
+        showContactInput();
+      } else if (k === 1) {
+        cq.count++;
+        if (cq.count < 3) {
+          state.selected = -1;
+          for (var m = 0; m < btns.length; m++) btns[m].classList.remove('sel');
+          $('next').disabled = true;
+          $('qtext').childNodes[0].nodeValue = '我问你第 ' + (cq.count + 1) + ' 遍：你是否愿意留下你的联系方式？';
+          var re = $('qtext').querySelector('.sub');
+          if (re) re.textContent = '你不愿意。没关系，我继续问。';
+          recordClick();
+        } else {
+          $('qtext').childNodes[0].nodeValue = '你已经拒绝三次了。';
+          var re2 = $('qtext').querySelector('.sub');
+          if (re2) re2.textContent = '……我不问了。';
+          state.selected = 1;
+          b.classList.add('sel');
+          $('next').disabled = false;
+        }
+      }
+    });
+  });
+}
+
+function showContactInput() {
+  var q = $('qtext');
+  var w = document.createElement('div');
+  w.id = 'qtyWrap';
+  var inp = document.createElement('input');
+  inp.type = 'text';
+  inp.placeholder = '请输入联系方式';
+  inp.setAttribute('autocapitalize', 'off');
+  inp.setAttribute('autocorrect', 'off');
+  var d = document.createElement('div');
+  d.className = 'dismissed';
+  w.appendChild(inp);
+  w.appendChild(d);
+  q.appendChild(w);
+  try { inp.focus(); } catch (e) {}
+  setT(function () {
+    try { inp.blur(); } catch (e) {}
+    try { inp.readOnly = true; } catch (e) {}
+    if (d) d.textContent = '算了。';
+    state.selected = 0;
+    $('next').disabled = false;
+  }, 1000);
+  setT(function () {
+    if (inp && inp.parentNode) inp.parentNode.removeChild(inp);
+  }, 4200);
+}
+
+function renderQuiz(i) {
+  var q = QUESTIONS[i];
+  show('quiz');
+  if (i === 0 && state.returnCount > 1) {
+    $('qtext').innerHTML = '';
+    var returnTexts = ['', '果然你还会回来', '你又来了。', '你离不开这里。', '你还想试几次？'];
+    var txt = returnTexts[Math.min(state.returnCount - 1, 4)];
+    $('qtext').appendChild(document.createTextNode(txt));
+    try {
+      var lastTime = localStorage.getItem('psych-last-time');
+      if (lastTime) {
+        var sub = document.createElement('span');
+        sub.className = 'sub';
+        sub.textContent = '上次你用了 ' + lastTime + ' 秒。';
+        $('qtext').appendChild(sub);
+      }
+    } catch (e) {}
+    $('next').textContent = '下一题';
+    $('next').disabled = true;
+    $('next').onclick = function () { advance(); };
+    renderOptions(0, ['？', '？', '？', '？']);
+    repeatSpeak('陪陪我吧', 1500);
+    return;
+  }
+
+  $('qtext').innerHTML = '';
+  $('qtext').appendChild(document.createTextNode(q.t));
+
+  if (i === 4) {
+    setT(function () {
+      var qt = $('qtext');
+      if (!qt.childNodes.length) return;
+      var c = qt.childNodes[0];
+      if (!c.nodeValue || c.nodeValue.indexOf('存在') < 0) return;
+      c.nodeValue = c.nodeValue.replace('存在', '爱');
+      var sw = document.createElement('span');
+      sw.className = 'sub swap-note';
+      sw.textContent = '你刚才点的不是这个字。';
+      qt.appendChild(sw);
+    }, 2400);
+  }
+
+  var sub = '';
+  if (i === 16) sub = sub17();
+  else if (i === 17) sub = sub18();
+  else if (i === 18) sub = sub19();
+  else if (i === 19) sub = sub20();
+
+  if (sub) {
+    var s = document.createElement('span');
+    s.className = 'sub';
+    s.textContent = sub;
+    $('qtext').appendChild(s);
+  }
+
+  if (i >= 12 && i <= 15) {
+    setT(function () {
+      var qt = $('qtext');
+      var node = qt.childNodes[0];
+      if (!node || !node.nodeValue) return;
+      var original = node.nodeValue;
+      var disguised = original.replace('忈', '望').replace('惢', '惧').replace('██', '绝');
+      if (disguised === original) return;
+      node.nodeValue = disguised;
+      var flickerCount = 0;
+      var flicker = setInterval(function () {
+        node.nodeValue = flickerCount % 2 === 0 ? original : disguised;
+        flickerCount++;
+        if (flickerCount > 6) {
+          clearInterval(flicker);
+          node.nodeValue = original;
+          qt.style.textShadow = '0 0 8px rgba(0,0,0,0.15), 1px 0 0 rgba(0,0,0,0.08), -1px 0 0 rgba(0,0,0,0.08)';
+          setT(function () { qt.style.textShadow = ''; }, 2000);
+        }
+      }, 80);
+    }, 2000);
+  }
+
+  if (i === 23) {
+    $('options').innerHTML = '';
+    $('next').disabled = true;
+    $('next').textContent = '关闭';
+    $('next').disabled = false;
+    $('next').onclick = fakeClose;
+    setT(notifyAfter20s, 20000);
+    hookNotificationGesture();
+    try { localStorage.setItem('psych-last-time', fmt(Date.now() - data.startedAt)); } catch (e) {}
+    renderReport();
+    return;
+  }
+
+  $('next').textContent = '下一题';
+  $('next').disabled = true;
+  $('next').onclick = function () { advance(); };
+  renderOptions(i);
+
+  if (i === 18) {
+    bindContactQuestion();
+  }
+
+  if (sub) {
+    setT(function () { speakData(sub, 0.2, 0.55); }, 1500);
+  }
+}
+
+function renderReport() {
+  var box = document.createElement('div');
+  box.id = 'reportBox';
+  var lines = [];
+  var q = data.questions;
+  var avg = 0, n = 0, i;
+  for (i = 0; i < 22; i++) {
+    if (q[i].duration) { avg += q[i].duration; n++; }
+  }
+  if (n) avg = avg / n;
+  lines.push('<div class="r-line">总用时 ' + fmt(Date.now() - data.startedAt) + ' 秒</div>');
+  lines.push('<div class="r-line">平均每题 ' + fmt(avg) + ' 秒</div>');
+  lines.push('<div class="r-line">你切走了 ' + data.tabSwitches.length + ' 次</div>');
+  lines.push('<div class="r-line">你改动了 ' + totalChanges() + ' 次答案</div>');
+  if (state.returnCount <= 1) lines.push('<div class="r-warn">你还好吗。</div>');
+  else if (state.returnCount === 2) lines.push('<div class="r-warn">你又来了。</div>');
+  else {
+    lines.push('<div class="r-warn">我们见面吧，把摄像头打开。</div>');
+  }
+  box.innerHTML = lines.join('');
+  $('qtext').appendChild(box);
+}
+
+function totalChanges() {
+  var s = 0, i;
+  for (i = 0; i < 24; i++) s += data.questions[i].answerChanges || 0;
+  return s;
+}
+
+function renderBlank(i) {
+  show('blank');
+  stopRepeatSpeak();
+  var remnant = document.createElement('div');
+  remnant.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:13px;color:rgba(0,0,0,0.06);letter-spacing:6px;white-space:nowrap;pointer-events:none;z-index:1;';
+  remnant.textContent = '你还在吗';
+  document.body.appendChild(remnant);
+  var flickerR = setInterval(function () {
+    remnant.style.opacity = Math.random() < 0.3 ? '1' : '0';
+  }, 200);
+  setT(function () {
+    try { clearInterval(flickerR); remnant.style.opacity = '0'; } catch (e) {}
+    try { document.body.removeChild(remnant); } catch (e) {}
+    advance();
+  }, QUESTIONS[i].blankSec * 1000);
+  setT(function () { if (Math.random() < 0.6) playRandomWhisper(); }, 5000);
+}
+
+function renderQuestion(i) {
+  state.idx = i;
+  state.selected = -1;
+  state.answerChanges = 0;
+  state.hoverStart = 0;
+  var rec = data.questions[i];
+  rec.enterTime = Date.now();
+  if (i >= 4) updateProgress();
+  applyStage(i);
+  if (QUESTIONS[i].blank) { renderBlank(i); return; }
+  renderQuiz(i);
+}
+
+function advance() {
+  var i = state.idx;
+  var rec = data.questions[i];
+  rec.duration = Date.now() - rec.enterTime;
+  rec.answerChanges = state.answerChanges;
+  rec.answer = state.selected;
+  refillOptionHover(i);
+  recordClick();
+
+  if (i === 0) stopRepeatSpeak();
+
+  if (i === 21) { startClimax(); return; }
+
+  var n = i + 1;
+  if (n < 24) renderQuestion(n);
+}
+
+function printWaves(w, k, n) {
+  if (state.skipClimax) return;
+  if (w >= WAVES.length) {
+    setT(staticThenScare, 3500);
+    return;
+  }
+  var line = document.createElement('div');
+  line.className = 'cl-line';
+  line.textContent = WAVES[w].text;
+  $('climax').appendChild(line);
+  k++;
+  if (k < WAVES[w].count) {
+    var delay = Math.max(50, 800 - n * 28);
+    setT(function () { printWaves(w, k, n + 1); }, delay);
+  } else {
+    setT(function () { printWaves(w + 1, 0, n + 1); }, 60);
+  }
+}
+
+function startClimax() {
+  state.climaxMode = true;
+  state.skipClimax = false;
+  stopRepeatSpeak();
+  setBgm('full');
+  stopBuzz();
+  startHeart(heartBpmFor(20));
+  show('climax');
+  $('climax').innerHTML = '';
+  escalatingSpeak('我不想在这了', 6);
+  printWaves(0, 0, 0);
+}
+
+function staticThenScare() {
+  if (state.skipClimax) return;
+  var scareBox = $('scare');
+  scareBox.innerHTML = '';
+  var words = ['我不想在这了', '我想死', '死死死', '冤冤冤', '你回头', '看不见我', '后身', '你还在吗'];
+  for (var i = 0; i < 120; i++) {
+    var s = document.createElement('div');
+    s.className = 'noise-line';
+    s.style.fontSize = (10 + Math.random() * 22) + 'px';
+    var w = words[Math.floor(Math.random() * words.length)];
+    s.textContent = w + '  ';
+    scareBox.appendChild(s);
+  }
+  show('scare');
+  setT(function () {
+    humanRoar();
+    if ('speechSynthesis' in window) {
+      speakData('我不想在这了', 0, 3.0);
+    }
+  }, 400);
+  scareBox.classList.add('flash');
+  setT(function () { scareBox.classList.remove('flash'); }, 100);
+  setT(startStrobe, 950);
+  setT(advanceAfterClimax, 1700);
+}
+
+function startStrobe() {
+  if (state.skipClimax) return;
+  var colors = ['#ff0000', '#000000', '#ff0000', '#000000', '#ff0000', '#000000'];
+  var i = 0;
+  function tick() {
+    if (state.skipClimax) return;
+    if (i >= colors.length) {
+      $('scare').style.background = '';
+      return;
+    }
+    $('scare').style.background = colors[i++];
+    setT(tick, 70);
+  }
+  tick();
+}
+
+function advanceAfterClimax() {
+  state.climaxMode = false;
+  state.skipClimax = false;
+  $('scare').style.background = '';
+  $('scare').classList.remove('flash');
+  if ('speechSynthesis' in window) { window.speechSynthesis.cancel(); }
+  renderQuestion(22);
+}
+
+function skipFromKey(e) {
+  if (e.key === 'Escape' && state.climaxMode && !state.skipClimax) {
+    state.skipClimax = true;
+    clearTimers();
+    advanceAfterClimax();
+  }
+}
+
+function fireNotif() {
+  if (state.notified) return;
+  if (!('Notification' in window) || Notification.permission !== 'granted') return;
+  try {
+    new Notification('心理健康自评', { body: '我会记得你。' });
+    state.notified = true;
+  } catch (e) {}
+}
+
+function notifyAfter20s() {
+  fireNotif();
+  if (!('Notification' in window) || Notification.permission !== 'default') return;
+  try {
+    var req = Notification.requestPermission();
+    if (req && req.then) {
+      req.then(function (p) {
+        data.permissions.notification = p;
+        fireNotif();
+      })['catch'](function () {});
+    }
+  } catch (e) {}
+}
+
+function hookNotificationGesture() {
+  document.addEventListener('click', function () {
+    if (!('Notification' in window) || Notification.permission !== 'default' || state.notified) return;
+    try {
+      var req = Notification.requestPermission();
+      if (req && req.then) {
+        req.then(function (p) {
+          data.permissions.notification = p;
+          fireNotif();
+        })['catch'](function () {});
+      }
+    } catch (e) {}
+  }, { once: true, capture: true });
+}
+
+function whisper() {
+  if (state.speech === 'mp3') { playVoiceMp3('', 0.3); return; }
+  if (!('speechSynthesis' in window)) return;
+  var u = new SpeechSynthesisUtterance('你确定吗');
+  u.pitch = 1.4 + (Math.random() - 0.5) * 0.3;
+  u.rate = 1.7; u.volume = 0.12; u.lang = 'zh-CN';
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(u);
+}
+
+function speakTimes(text, count, gap) {
+  if (state.speech === 'mp3') {
+    var i = 0;
+    function oneMp3() {
+      if (i >= count) return;
+      playVoiceMp3(text, 1);
+      i++;
+      setTimeout(oneMp3, (gap || 650) + 450);
+    }
+    oneMp3();
+    return;
+  }
+  if (!('speechSynthesis' in window)) return;
+  var i = 0;
+  function one() {
+    if (i >= count) return;
+    var u = new SpeechSynthesisUtterance(text);
+    u.pitch = 0.7; u.rate = 0.9; u.volume = 0.8; u.lang = 'zh-CN';
+    window.speechSynthesis.speak(u);
+    i++;
+    setTimeout(one, gap);
+  }
+  one();
+}
+
+function repeatSpeak(text, gap) {
+  if (state.speech === 'mp3') {
+    function oneMp3() {
+      if (state.skipClimax) return;
+      playVoiceMp3(text, 0.9);
+      state.repeatId = setTimeout(oneMp3, (gap || 1600) + 600);
+    }
+    oneMp3();
+    return;
+  }
+  if (!('speechSynthesis' in window)) return;
+  function one() {
+    if (state.skipClimax) return;
+    var u = new SpeechSynthesisUtterance(text);
+    u.pitch = 0.75; u.rate = 0.85; u.volume = 0.85; u.lang = 'zh-CN';
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+    state.repeatId = setTimeout(one, gap || 1600);
+  }
+  one();
+}
+
+function stopRepeatSpeak() {
+  if (state.repeatId) { clearTimeout(state.repeatId); state.repeatId = 0; }
+  if (state.speech === 'mp3') { return; }
+  if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+
+function fakeClose() {
+  stopRepeatSpeak();
+  stopHeart();
+  if (bgmSrc) { try { bgmSrc.stop(); } catch (e) {} bgmSrc = null; }
+  show('fauxDeath');
+  $('fauxDeath').classList.add('on');
+  void $('fauxDeath').offsetWidth;
+  setT(function () {
+    $('fauxDeath').classList.remove('on');
+    var red = $('red');
+    red.querySelectorAll('.tiny').forEach(function (t) { t.remove(); });
+    show('red');
+    var who = document.createElement('div');
+    who.className = 'red';
+    who.textContent = '你在找什么？';
+    red.insertBefore(who, red.firstChild);
+    whisper();
+    fireNotif();
+    speakTimes('我好孤独', 10, 650);
+    setTimeout(function () {
+      try { window.close(); } catch (e) {}
+    }, 900);
+    setTimeout(function () {
+      if (red.classList.contains('hidden')) return;
+      var t = document.createElement('div');
+      t.className = 'tiny';
+      t.textContent = '页面未自动关闭时，请手动关闭标签页。';
+      red.appendChild(t);
+    }, 1300);
+  }, 3000);
+}
+
+function doTabScare(ms) {
+  var scareBox = $('scare');
+  scareBox.innerHTML = '';
+  var big = document.createElement('div');
+  big.className = 'big';
+  big.textContent = '你离开了 ' + fmt(ms) + ' 秒。我一直在等。';
+  scareBox.appendChild(big);
+  show('scare');
+  scareBurst();
+  scareBox.classList.add('flash');
+  setT(function () { scareBox.classList.remove('flash'); }, 100);
+  setT(function () {
+    if (state.climaxMode) return;
+    show('quiz');
+    var i = state.idx;
+    $('next').onclick = i === 23 ? fakeClose : function () { advance(); };
+  }, 900);
+}
+
+function showWatch(on) {
+  var w = $('watchLayer');
+  if (on) w.classList.add('on');
+  else w.classList.remove('on');
+}
+
+function quickEye() {
+  var w = $('watchLayer');
+  w.classList.add('on');
+  setTimeout(function () { w.classList.remove('on'); }, 700);
+}
+
+function maybeBlackFlash() {
+  if (Math.random() > 0.01) return;
+  var f = $('blackFlash');
+  f.classList.add('on');
+  setTimeout(function () { f.classList.remove('on'); }, 120);
+}
+
+function jitterBody() {
+  var body = document.body;
+  body.classList.remove('skew-shake');
+  void body.offsetWidth;
+  body.classList.add('skew-shake');
+}
+
+function scheduleJitter() {
+  setT(function () {
+    if (!state.hasInteracted) return;
+    jitterBody();
+    scheduleJitter();
+  }, 40000 + Math.random() * 20000);
+}
+
+function registerBg() {
+  document.addEventListener('click', function () { resumeCtx(); }, true);
+  document.addEventListener('keydown', function () { resumeCtx(); }, true);
+  document.addEventListener('touchstart', function () {
+    resumeCtx();
+    if (state.climaxMode && !state.skipClimax) {
+      state.skipClimax = true;
+      clearTimers();
+      advanceAfterClimax();
+    }
+  }, true);
+
+  document.addEventListener('visibilitychange', function () {
+    if (!state.hasInteracted) return;
+    if (document.visibilityState === 'hidden') {
+      hiddenAt = Date.now();
+      slowBgm();
+      showWatch(true);
+      return;
+    }
+    if (hiddenAt) {
+      var now = Date.now();
+      data.tabSwitches.push({ leaveTime: hiddenAt, returnTime: now, duration: now - hiddenAt });
+      var wasHidden = hiddenAt;
+      hiddenAt = 0;
+      restoreBgm();
+      showWatch(false);
+      if (!state.climaxMode && state.idx >= 4) {
+        var prob = (state.idx >= 16 && state.idx <= 19) ? 0.45 : 0.15;
+        if (Math.random() < prob) {
+          doTabScare(now - wasHidden);
+        }
+      }
+    }
+  });
+
+  window.addEventListener('beforeunload', function (e) {
+    if (!state.hasInteracted) return;
+    data.exitTime = Date.now();
+    if ('speechSynthesis' in window) { window.speechSynthesis.cancel(); }
+    stopHeart();
+    if (bgmSrc) { try { bgmSrc.stop(); } catch (err) {} bgmSrc = null; }
+    var black = document.createElement('div');
+    black.style.cssText = 'position:fixed;inset:0;background:#000;z-index:9999;display:flex;align-items:center;justify-content:center;';
+    black.innerHTML = '<span style="color:#333;font-size:14px;letter-spacing:8px;">.</span>';
+    document.body.appendChild(black);
+    setTimeout(function () {
+      try {
+        var u = new SpeechSynthesisUtterance('你确定吗');
+        u.pitch = 0.1; u.rate = 0.4; u.volume = 0.6; u.lang = 'zh-CN';
+        window.speechSynthesis.speak(u);
+      } catch (err) {}
+    }, 500);
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  });
+  scheduleJitter();
+}
+
+document.addEventListener('keydown', skipFromKey);
+
+$('startBtn').addEventListener('click', function () {
+  if (state.hasInteracted) return;
+  state.hasInteracted = true;
+  try {
+    var rc = parseInt(localStorage.getItem('psych-return-count') || '0', 10);
+    if (isNaN(rc)) rc = 0;
+    rc += 1;
+    state.returnCount = rc;
+    localStorage.setItem('psych-return-count', String(rc));
+  } catch (e) { state.returnCount = 1; }
+  if ('Notification' in window && Notification.permission === 'default') {
+    try {
+      var req = Notification.requestPermission();
+      if (req && req.then) {
+        req.then(function (p) { data.permissions.notification = p; })['catch'](function () { data.permissions.notification = 'denied'; });
+      }
+    } catch (e) { data.permissions.notification = 'denied'; }
+  }
+  initAudio();
+  try {
+    var el = document.documentElement;
+    var fs = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+    if (fs) {
+      var p = fs.call(el);
+      if (p && p['catch']) p['catch'](function () {});
+    }
+  } catch (e) {}
+  data.startedAt = Date.now();
+  registerBg();
+  scheduleRandomWhispers();
+  scheduleCursorJitter();
+  initTitleGlitch();
+  probeSpeech(function (ok) {
+    state.speech = ok ? 'tts' : 'mp3';
+    renderQuestion(0);
+  });
+});
+
+$('exitBtn').addEventListener('click', fakeClose);
+
+})();
+</script>
+</body>
+</html>
