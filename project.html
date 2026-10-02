@@ -219,6 +219,10 @@ td b{font-weight:600}
 .exam-sec-list li{display:flex;justify-content:space-between;gap:12px;align-items:baseline;padding:9px 2px;border-bottom:1px solid var(--rule-2);font-size:14px}
 .exam-sec-list li b{font-family:var(--serif);font-weight:600}
 .exam-sec-list li .muted{font-size:12.5px}
+.exam-sec-list li.exam-part-row{background:rgba(0,0,0,.04);border-bottom:1px solid var(--rule);padding:8px 6px}
+.exam-sec-list li.exam-part-row b{font-family:var(--sans);font-size:13px;letter-spacing:.04em;font-weight:700}
+.exam-sec-list li.exam-part-row span{color:var(--ink-2);font-size:12.5px;font-weight:600}
+.exam-sec-list li.miss{opacity:.6}
 .exam-opt{margin-bottom:14px}
 .exam-opt label{display:block;font-size:12.5px;color:var(--ink-2);margin-bottom:5px}
 .exam-opt select{width:100%}
@@ -237,6 +241,10 @@ td b{font-weight:600}
 .exam-sec-head .eh-num{font-family:var(--serif);font-style:italic;font-size:15px;color:var(--accent)}
 .exam-sec-head .eh-title{font-family:var(--serif);font-size:18px;font-weight:600}
 .exam-sec-head .eh-note{margin-left:auto;font-size:12px;letter-spacing:.06em;color:var(--ink-3)}
+.exam-part-head{display:flex;align-items:baseline;gap:12px;margin:28px 0 4px;padding-bottom:8px;border-bottom:3px double var(--ink)}
+.exam-part-head:first-child{margin-top:6px}
+.exam-part-head .ep-title{font-family:var(--serif);font-size:20px;font-weight:700}
+.exam-part-head .ep-points{margin-left:auto;font-size:12.5px;letter-spacing:.08em;color:var(--ink-3)}
 .exam-q{margin-bottom:16px}
 .q-option.chosen,.blank-opt.chosen{border-color:var(--blue)!important;background:var(--blue-wash)!important;color:var(--blue)!important;font-weight:600}
 .exam-report-top{display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between;padding:16px 18px;background:var(--blue-wash);border:1px solid var(--rule);border-radius:3px;margin-bottom:16px}
@@ -246,6 +254,13 @@ td b{font-weight:600}
 .exam-sec-table th,.exam-sec-table td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule-2)}
 .exam-sec-table th{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
 .exam-sec-table td:last-child,.exam-sec-table th:last-child{text-align:right}
+.exam-sec-table tr.part-row td{background:rgba(0,0,0,.045);font-weight:700;border-bottom:1px solid var(--rule)}
+.exam-sec-table tr.total-row td{border-top:2px solid var(--ink);border-bottom:none;font-size:14.5px}
+input.ra-input{display:block;width:100%;margin-top:8px;padding:9px 11px;border:1px solid var(--rule);border-radius:2px;background:#fff;font-family:var(--sans);font-size:14px;color:var(--ink)}
+input.ra-input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-wash)}
+input.ra-input.correct{border-color:var(--olive);background:var(--olive-wash)}
+input.ra-input.wrong{border-color:var(--accent);background:var(--accent-wash)}
+input.ra-input:disabled{opacity:.9}
 
 .q-text{font-size:16px;line-height:1.7;color:var(--ink);margin:0 0 18px}
 
@@ -755,12 +770,15 @@ td b{font-weight:600}
         <div class="qbank-toolbar">
           <select id="bank-filter-type">
             <option value="all">全部题型</option>
-            <option value="choice">单项选择</option>
             <option value="reading">阅读理解</option>
-            <option value="cloze">综合填空</option>
-            <option value="verb">动词填空</option>
+            <option value="seven">阅读七选五</option>
+            <option value="cloze">完形填空</option>
+            <option value="fillgap">短文填空</option>
+            <option value="readanswer">阅读表达</option>
             <option value="listening">听力题</option>
             <option value="writing">作文</option>
+            <option value="choice">单项选择</option>
+            <option value="verb">动词填空</option>
           </select>
           <select id="bank-filter-diff">
             <option value="all">全部难度</option>
@@ -784,7 +802,7 @@ td b{font-weight:600}
         <div id="bank-import-area" style="display:none;margin-top:16px">
           <textarea id="bank-import-json" class="code" style="min-height:180px" placeholder='粘贴题目 JSON（数组或单个对象）。也支持点下方「选择文件」。
 
-支持 6 种题型：
+支持 9 种题型：
 
 【单项选择】
 {"type":"choice","question":"...","options":["A","B","C","D"],"answer":"A","explanation":"...","difficulty":3}
@@ -792,8 +810,17 @@ td b{font-weight:600}
 【阅读理解】
 {"type":"reading","level":"A","title":"...","passage":"...","questions":[{"question":"...","options":[...],"answer":"...","explanation":"..."}],"difficulty":2}
 
-【综合填空】（10个空，可四选一或自由填词；自由填词时 pos 词性会显示在填空框后）
+【完形填空】（10个空，四选一或自由填词；自由填词时 pos 词性会显示在填空框后）
 {"type":"cloze","passage":"用 ___ 表示空格","blanks":[{"options":["A","B","C","D"],"answer":"A","pos":"名词","explanation":"..."},...],"difficulty":3}
+
+【阅读七选五 / 六选五】（每空 7 个选项，七选五）
+{"type":"cloze","seven":true,"passage":"含 5 个 ___ 的短文","blanks":[{"options":["A 句","B 句","C 句","D 句","E 句","F 句","G 句"],"answer":"该空应填的句子","explanation":"..."},...],"difficulty":3}
+
+【短文填空】（首字母 / 语境填词，不给选项）
+{"type":"cloze","noOptions":true,"passage":"含 ___ 的短文","blanks":[{"answer":"单词","hint":"首字母","pos":"名词","explanation":"..."},...],"difficulty":3}
+
+【阅读表达】（根据文章回答问题）
+{"type":"reading","mode":"open","title":"...","passage":"...","questions":[{"question":"英文问题","answer":"英文参考答案","explanation":"..."}],"difficulty":3}
 
 【动词填空】（含提示词）
 {"type":"verb","sentences":[{"text":"He ___ (go) to school yesterday.","answer":"went","hint":"go","explanation":"..."}],"difficulty":2}
@@ -864,8 +891,11 @@ td b{font-weight:600}
             <label>题型</label>
             <select id="ai-type">
               <option value="choice">单项选择</option>
-              <option value="reading">阅读理解（A-D 难度递增）</option>
-              <option value="cloze">综合填空（10空短文）</option>
+              <option value="reading">阅读理解（四选一 · A-D 难度递增）</option>
+              <option value="seven">阅读七选五 / 六选五</option>
+              <option value="cloze">完形填空（10空短文）</option>
+              <option value="fillgap">短文填空（首字母 / 语境填词）</option>
+              <option value="readanswer">阅读表达（根据文章回答问题）</option>
               <option value="verb">动词填空（10空短文）</option>
               <option value="listening">听力题（中考题型）</option>
               <option value="writing">作文</option>
@@ -1073,7 +1103,10 @@ td b{font-weight:600}
         <div class="prompt-tabs" id="prompt-tabs">
           <button class="prompt-tab on" data-p="choice">单项选择</button>
           <button class="prompt-tab" data-p="reading">阅读理解</button>
-          <button class="prompt-tab" data-p="cloze">综合填空</button>
+          <button class="prompt-tab" data-p="seven">阅读七选五</button>
+          <button class="prompt-tab" data-p="cloze">完形填空</button>
+          <button class="prompt-tab" data-p="fillgap">短文填空</button>
+          <button class="prompt-tab" data-p="readanswer">阅读表达</button>
           <button class="prompt-tab" data-p="verb">动词填空</button>
           <button class="prompt-tab" data-p="listening">听力题</button>
           <button class="prompt-tab" data-p="writing">作文</button>
@@ -1416,6 +1449,82 @@ level 取 A/B/C/D，难度依次递增，词汇与句式相应变难。`,
     "difficulty": 3
   }
 ]`,
+
+  seven: `你是一位英语教师。生成阅读七选五（六选五）题目。
+只返回 JSON 数组，不含 Markdown 代码块，不含解释文字。
+
+格式：
+[
+  {
+    "title": "短文标题",
+    "passage": "一篇短文，含 5 个空，用 ___ 表示（共 5 个）",
+    "blanks": [
+      {
+        "options": ["A 句", "B 句", "C 句", "D 句", "E 句", "F 句", "G 句"],
+        "answer": "该空的正确句子（必须与 options 中某一项完全一致）",
+        "explanation": "中文解析"
+      }
+    ],
+    "difficulty": 3
+  }
+]
+
+要求：
+1. 先给出 7 个备选句子 A-G（5 个入文、2 个干扰），再把它们填入短文的 5 个空。
+2. passage 中 ___ 的数量必须等于 blanks 数量（5 个）。
+3. 每个 blank 的 options 必须是同一组 7 个句子（按 A 到 G 顺序），answer 为该空应填的句子原文。
+4. 选项通常是完整句子或小标题，长度相近、与上下文衔接自然。
+5. 短文题材与用户给定主题一致。`,
+
+  fillgap: `你是一位英语教师。生成短文填空题（首字母 / 语境填词）。
+只返回 JSON 数组，不含 Markdown 代码块，不含解释文字。
+
+格式：
+[
+  {
+    "passage": "一篇短文，含 10 个空，用 ___ 表示（共 10 个）",
+    "blanks": [
+      {
+        "answer": "该空的单词（原文形式）",
+        "hint": "答案的首字母，小写，如 w",
+        "pos": "词性：名词/动词/形容词/副词/数词等；代词、介词、连词填 \"\"",
+        "explanation": "中文解析"
+      }
+    ],
+    "difficulty": 3
+  }
+]
+
+要求：
+1. passage 中 ___ 的数量必须等于 blanks 数量（建议 10 个）。
+2. 不要提供 options 字段，学生要根据语境与首字母自己填写单词。
+3. hint 必须是 answer 的首字母（小写）。
+4. 考查词汇与固定搭配，答案为单个单词，且在语境中唯一。`,
+
+  readanswer: `你是一位英语教师。生成阅读表达题（根据文章回答问题）。
+只返回 JSON 数组，不含 Markdown 代码块，不含解释文字。
+
+格式：
+[
+  {
+    "title": "短文标题",
+    "passage": "一篇 200-260 词的短文",
+    "questions": [
+      {
+        "question": "英文问题",
+        "answer": "参考答案（英文完整句或短语；也可用数组给出多种可接受答案）",
+        "explanation": "中文解析 / 定位原文的依据"
+      }
+    ],
+    "difficulty": 3
+  }
+]
+
+要求：
+1. 短文中必须能找到答案依据，问题顺序与文章信息顺序一致。
+2. 生成 3-4 个问题；问题用英文，参考答案用英文，答案要简明，不要整段抄原文。
+3. answer 可以是字符串或字符串数组（数组表示多种可接受答案）。
+4. 短文题材与用户给定主题一致。`,
 
   analysis: `你是一位耐心的英语老师。学生做错了一道题，请给出详细解析。
 
@@ -3069,8 +3178,24 @@ function saveBank() {
 function ensureQIds(list){ list.forEach(q => { if (!q.id) q.id = uid(); }); return list; }
 
 function typeLabel(t) {
-  return { choice:'单项选择', reading:'阅读理解', cloze:'综合填空', verb:'动词填空', listening:'听力题', writing:'作文' }[t] || t;
+  return KIND_LABEL[t] || t;
 }
+/* 题型「种类」：区分七选五 / 短文填空 / 阅读表达等变体 */
+const KIND_LABEL = {
+  choice:'单项选择', reading:'阅读理解', cloze:'完形填空', verb:'动词填空', listening:'听力题', writing:'作文',
+  seven:'阅读七选五', fillgap:'短文填空', readanswer:'阅读表达'
+};
+function qKind(q) {
+  if (!q) return '';
+  if (q.type === 'cloze') {
+    if (q.seven) return 'seven';
+    const hasOpts = (q.blanks || []).some(b => Array.isArray(b.options) && b.options.length >= 2);
+    return (q.noOptions || !hasOpts) ? 'fillgap' : 'cloze';
+  }
+  if (q.type === 'reading') return q.mode === 'open' ? 'readanswer' : 'reading';
+  return q.type;
+}
+function kindLabel(q) { return KIND_LABEL[qKind(q)] || (q && q.type) || ''; }
 function listeningSubLabel(s) {
   return { short_dialogue:'短对话问答', long_dialogue:'长对话理解', table:'听力填表' }[s] || '听力';
 }
@@ -3086,14 +3211,15 @@ function renderBankList() {
     box.innerHTML = `<div class="bank-empty"><h3>题库为空</h3><p>可以在「AI 出题」生成，或点击上方「导入题目」粘贴 JSON。</p></div>`;
     return;
   }
-  const groups = { choice:[], reading:[], cloze:[], verb:[], listening:[], writing:[] };
-  bank.forEach(q => { (groups[q.type] || (groups[q.type] = [])).push(q); });
+  const groups = {};
+  bank.forEach(q => { const k = qKind(q); (groups[k] || (groups[k] = [])).push(q); });
   let html = '';
-  Object.keys(groups).forEach(t => {
+  const order = ['listening','reading','seven','cloze','fillgap','readanswer','writing','choice','verb'];
+  Object.keys(groups).sort((a, b) => order.indexOf(a) - order.indexOf(b)).forEach(t => {
     const list = groups[t]; if (!list.length) return;
     html += `<div style="margin-bottom:18px">
       <div style="font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px">
-        ${typeLabel(t)} · ${list.length} 题
+        ${KIND_LABEL[t] || t} · ${list.length} 题
       </div>
       <div class="table-wrap"><table><tbody>
       ${list.map((q, i) => `
@@ -3262,7 +3388,20 @@ function normalizeQuestion(raw) {
   }
   if (t === 'reading') {
     const qs = Array.isArray(raw.questions) ? raw.questions : [];
+    const open = raw.mode === 'open';
     const normQs = qs.map(sq => {
+      if (open) {
+        const question = String(sq.question || '').trim();
+        const ans = Array.isArray(sq.answer)
+          ? sq.answer.map(String).map(s => s.trim()).filter(Boolean)
+          : String(sq.answer == null ? '' : sq.answer).trim();
+        if (!question || (Array.isArray(ans) ? !ans.length : !ans)) return null;
+        return {
+          question, answer: ans,
+          point: String(sq.point || '').trim(),
+          explanation: String(sq.explanation || '').trim()
+        };
+      }
       const opts = Array.isArray(sq.options) ? sq.options.map(String).filter(Boolean) : [];
       const ans = resolveAnswer(sq.answer, opts);
       if (opts.length < 2 || !ans) return null;
@@ -3274,19 +3413,23 @@ function normalizeQuestion(raw) {
       };
     }).filter(Boolean);
     if (!normQs.length || !raw.passage) return null;
-    return {
+    const rq = {
       id: uid(), type:'reading', difficulty: diff,
       point: String(raw.point || '').trim(),
       level: String(raw.level || 'A').toUpperCase().slice(0,1),
-      title: String(raw.title || '阅读理解').trim(),
+      title: String(raw.title || (open ? '阅读表达' : '阅读理解')).trim(),
       passage: String(raw.passage || '').trim(),
       questions: normQs
     };
+    if (open) rq.mode = 'open';
+    return rq;
   }
   if (t === 'cloze') {
     const blanks = Array.isArray(raw.blanks) ? raw.blanks : [];
+    const noOptions = !!raw.noOptions;
     const normBlanks = blanks.map(b => {
-      const opts = Array.isArray(b.options) ? b.options.map(String).filter(Boolean) : [];
+      let opts = Array.isArray(b.options) ? b.options.map(String).filter(Boolean) : [];
+      if (noOptions) opts = [];
       const rawAns = String(b.answer == null ? '' : b.answer).trim();
       // 有选项时把答案归一到选项原文；没有选项即为自由填词，直接使用 answer 原文
       const ans = opts.length ? resolveAnswer(rawAns, opts) : rawAns;
@@ -3294,18 +3437,22 @@ function normalizeQuestion(raw) {
       return {
         options: opts,
         answer: ans,
+        hint: String(b.hint || b.firstLetter || '').trim(),
         pos: normalizePos(b.pos || b.posHint || b.partOfSpeech || b.wordClass),
         point: String(b.point || '').trim(),
         explanation: String(b.explanation || '').trim()
       };
     }).filter(Boolean);
     if (!normBlanks.length || !raw.passage) return null;
-    return {
+    const rc = {
       id: uid(), type:'cloze', difficulty: diff,
       point: String(raw.point || '').trim(),
       passage: String(raw.passage || '').trim(),
       blanks: normBlanks
     };
+    if (raw.seven) rc.seven = true;
+    if (noOptions) rc.noOptions = true;
+    return rc;
   }
   if (t === 'verb') {
     const ss = Array.isArray(raw.sentences) ? raw.sentences : [];
@@ -3474,7 +3621,7 @@ function saveStats() { saveJSON(STATS_KEY, stats); }
 /* 记录一次小题作答；答错时自动进错题本 */
 function recordItem(q, correct, point) {
   if (!q) return;
-  const type = q.type || 'other';
+  const type = qKind(q) || 'other';
   const T = stats.types[type] || (stats.types[type] = { wrong: 0, total: 0 });
   T.total++;
   if (!correct) T.wrong++;
@@ -3810,7 +3957,7 @@ function renderWrongBook() {
   const rows = wrongBook.slice().sort((a, b) => (b.lastAt || 0) - (a.lastAt || 0)).map(e => {
     const q = e.q || {};
     return `<tr>
-      <td style="width:92px"><span class="badge gray" style="margin:0">${esc(typeLabel(q.type))}</span></td>
+      <td style="width:92px"><span class="badge gray" style="margin:0">${esc(kindLabel(q))}</span></td>
       <td>${esc(briefOf(q))}</td>
       <td style="width:150px" class="muted small">错 ${e.wrongCount || 0} 次 · 对 ${e.rightCount || 0} 次${e.streak ? ` · 连对 ${e.streak}` : ''}</td>
       <td style="width:70px"><button class="icon-btn" data-wb-del="${esc(e.qid)}" title="移出错题本">✕</button></td>
@@ -3873,7 +4020,7 @@ function memEntriesFromQ(q) {
   const add = (text, answers, note, src) => {
     if (!text || !answers || !answers.length || out.length >= 10) return;
     if (!/_+/.test(text)) return;
-    out.push({ text: text.trim(), answers: answers.map(String), note: String(note || '').trim(), src: src || typeLabel(q.type), qid: q.id });
+    out.push({ text: text.trim(), answers: answers.map(String), note: String(note || '').trim(), src: src || kindLabel(q), qid: q.id });
   };
 
   if (q.type === 'verb') {
@@ -3907,7 +4054,7 @@ function memEntriesFromQ(q) {
       });
       built += base.slice(cursor);
       const note = [target.pos ? `（${target.pos}）` : '', target.explanation || ''].filter(Boolean).join(' ');
-      add(built, [target.answer], note, '综合填空');
+      add(built, [target.answer], note, '完形填空');
     });
   } else if (q.type === 'choice') {
     if (q.example && q.word) {
@@ -4149,7 +4296,7 @@ function filterBankList() {
   const flagF = $('bank-filter-flag').value;
   const kw = $('bank-search').value.trim().toLowerCase();
   let list = bank.slice();
-  if (typeF !== 'all') list = list.filter(q => q.type === typeF);
+  if (typeF !== 'all') list = list.filter(q => qKind(q) === typeF);
   if (diffF !== 'all') list = list.filter(q => clamp(parseInt(q.difficulty)||1,1,5) === parseInt(diffF));
   if (flagF === 'flagged') list = list.filter(q => q.flagged);
   else if (flagF === 'unflagged') list = list.filter(q => !q.flagged);
@@ -4225,7 +4372,7 @@ function renderPractice() {
   const q = practice.list[pos];
   practice.answered = false;
   practice.state = {
-    useOptions: q && q.type === 'cloze' ? true : undefined,
+    useOptions: q && q.type === 'cloze' ? !q.noOptions : undefined,
     useOptionsVerb: q && q.type === 'verb' ? true : undefined,
     subAnswered: new Set(),
     blankAnswered: new Set(),
@@ -4330,41 +4477,91 @@ function rerenderCurrentQuestion() {
 
 /* =========================================================
    整卷模考
+   命题蓝图：四大部分 · 满分 120 分
+     第一部分 听力 30 分（短对话选择 10 / 长对话·短文选择 10 / 听力填表 10）
+     第二部分 阅读 40 分（阅读理解四选一 30 / 阅读七选五 10）
+     第三部分 语言运用 20 分（完形填空 10 / 短文填空 10）
+     第四部分 写作 30 分（阅读表达 10 / 书面表达 20）
    ========================================================= */
-const EXAM_PLAN = [
-  { type: 'listening', max: 2, label: '听力理解' },
-  { type: 'choice', max: 10, label: '单项选择' },
-  { type: 'reading', max: 2, label: '阅读理解' },
-  { type: 'cloze', max: 1, label: '综合填空' },
-  { type: 'verb', max: 1, label: '动词填空' },
-  { type: 'writing', max: 1, label: '书面表达' }
+const EXAM_PARTS = [
+  { label: '第一部分 · 听力', points: 30, groups: [
+    { kind: 'listening', match: q => q.subType === 'short_dialogue', label: '听短对话选择', points: 10, max: 1 },
+    { kind: 'listening', match: q => q.subType === 'long_dialogue', label: '听长对话 / 短文选择', points: 10, max: 1 },
+    { kind: 'listening', match: q => q.subType === 'table', label: '听短文填空（填表）', points: 10, max: 1 }
+  ]},
+  { label: '第二部分 · 阅读', points: 40, groups: [
+    { kind: 'reading', label: '阅读理解（四选一）', points: 30, max: 3 },
+    { kind: 'seven', label: '阅读七选五 / 六选五', points: 10, max: 1 }
+  ]},
+  { label: '第三部分 · 语言运用', points: 20, groups: [
+    { kind: 'cloze', label: '完形填空', points: 10, max: 1 },
+    { kind: 'fillgap', label: '短文填空（首字母 / 语境填词）', points: 10, max: 1 }
+  ]},
+  { label: '第四部分 · 写作', points: 30, groups: [
+    { kind: 'readanswer', label: '阅读表达（根据文章回答问题）', points: 10, max: 1 },
+    { kind: 'writing', label: '书面表达（话题作文）', points: 20, max: 1 }
+  ]}
 ];
-const TYPE_LABEL = { choice: '单项选择', reading: '阅读理解', cloze: '综合填空', verb: '动词填空', listening: '听力题', writing: '作文' };
 
-/* AI 全新出卷的板块计划（jobs 逐个调用 AI，合并进同一板块） */
+/* AI 全新出卷：与蓝图同结构，jobs 逐个调用 AI，合并进同一题型 */
 const EXAM_AI_PLAN = [
-  { type: 'listening', label: '听力理解', jobs: [{ count: 1, sub: 'short_dialogue' }, { count: 1, sub: 'long_dialogue' }] },
-  { type: 'choice', label: '单项选择', jobs: [{ count: 10 }] },
-  { type: 'reading', label: '阅读理解', jobs: [{ count: 2, extra: '- 请生成 2 篇完整的阅读理解：JSON 数组长度必须为 2，每篇含 3-5 个小题。\n' }] },
-  { type: 'cloze', label: '综合填空', jobs: [{ count: 1 }] },
-  { type: 'verb', label: '动词填空', jobs: [{ count: 1 }] },
-  { type: 'writing', label: '书面表达', jobs: [{ count: 1 }] }
+  { label: '第一部分 · 听力', points: 30, groups: [
+    { kind: 'listening', label: '听短对话选择', points: 10, jobs: [{ count: 1, sub: 'short_dialogue' }] },
+    { kind: 'listening', label: '听长对话 / 短文选择', points: 10, jobs: [{ count: 1, sub: 'long_dialogue' }] },
+    { kind: 'listening', label: '听短文填空（填表）', points: 10, jobs: [{ count: 1, sub: 'table' }] }
+  ]},
+  { label: '第二部分 · 阅读', points: 40, groups: [
+    { kind: 'reading', label: '阅读理解（四选一）', points: 30, jobs: [{ count: 3, extra: '- 请生成 3 篇完整的阅读理解：JSON 数组长度必须为 3，每篇含 3-5 个小题。\n' }] },
+    { kind: 'seven', label: '阅读七选五 / 六选五', points: 10, jobs: [{ count: 1 }] }
+  ]},
+  { label: '第三部分 · 语言运用', points: 20, groups: [
+    { kind: 'cloze', label: '完形填空', points: 10, jobs: [{ count: 1 }] },
+    { kind: 'fillgap', label: '短文填空（首字母 / 语境填词）', points: 10, jobs: [{ count: 1 }] }
+  ]},
+  { label: '第四部分 · 写作', points: 30, groups: [
+    { kind: 'readanswer', label: '阅读表达（根据文章回答问题）', points: 10, jobs: [{ count: 1 }] },
+    { kind: 'writing', label: '书面表达（话题作文）', points: 20, jobs: [{ count: 1 }] }
+  ]}
 ];
+
+function groupMatch(g, q) { return g.match ? g.match(q) : qKind(q) === g.kind; }
+
+/* 题库筛选决定蓝图范围：选中某题型时只保留对应题型的题型组 */
+function examPlanParts() {
+  const typeF = $('bank-filter-type').value;
+  if (typeF === 'all') return EXAM_PARTS;
+  const parts = [];
+  EXAM_PARTS.forEach(p => {
+    const groups = p.groups.filter(g => g.kind === typeF);
+    if (groups.length) parts.push({ label: p.label, points: groups.reduce((n, g) => n + g.points, 0), groups });
+  });
+  if (parts.length) return parts;
+  return [{ label: KIND_LABEL[typeF] || typeF, points: 0,
+    groups: [{ kind: typeF, label: KIND_LABEL[typeF] || typeF, points: 0, max: 50 }] }];
+}
 
 function examAIPlan() {
   const typeF = $('bank-filter-type').value;
-  return typeF === 'all' ? EXAM_AI_PLAN : EXAM_AI_PLAN.filter(s => s.type === typeF);
+  if (typeF === 'all') return EXAM_AI_PLAN;
+  const parts = [];
+  EXAM_AI_PLAN.forEach(p => {
+    const groups = p.groups.filter(g => g.kind === typeF);
+    if (groups.length) parts.push({ label: p.label, points: groups.reduce((n, g) => n + g.points, 0), groups });
+  });
+  if (parts.length) return parts;
+  return [{ label: KIND_LABEL[typeF] || typeF, points: 0,
+    groups: [{ kind: typeF, label: KIND_LABEL[typeF] || typeF, points: 0, jobs: [{ count: 1 }] }] }];
 }
 
-function aiPlanTarget(spec) {
-  const unit = { listening: '组', choice: '道', reading: '篇', cloze: '篇', verb: '篇', writing: '篇' }[spec.type] || '道';
-  const n = spec.jobs.reduce((a, j) => a + (parseInt(j.count, 10) || 0), 0);
-  const subs = spec.type === 'listening' ? '（' + spec.jobs.map(j => ({ short_dialogue: '短对话', long_dialogue: '长对话', table: '填表' }[j.sub] || '听力')).join(' + ') + '）' : '';
-  return `AI 生成 ${n} ${unit}${subs}`;
+function aiPlanTarget(g) {
+  const unit = { listening: '组', reading: '篇', cloze: '篇', seven: '篇', fillgap: '篇', readanswer: '篇', writing: '篇', choice: '道', verb: '篇' }[g.kind] || '道';
+  const n = (g.jobs || []).reduce((a, j) => a + (parseInt(j.count, 10) || 0), 0);
+  const subs = g.kind === 'listening' ? '（' + g.jobs.map(j => ({ short_dialogue: '短对话', long_dialogue: '长对话', table: '填表' }[j.sub] || '听力')).join(' + ') + '）' : '';
+  return `AI 生成 ${n} ${unit}${subs} · ${g.points} 分`;
 }
 
 const exam = {
-  active: false, graded: false, paper: [], sections: [],
+  active: false, graded: false, paper: [], sections: [], parts: [],
   source: 'bank', ai: { difficulty: 3, topic: '' }, generating: false, bankEmpty: false,
   timeLimit: 60, maxPlays: 2, remaining: 0, timer: null, startedAt: 0,
   listenState: {}, stats: null
@@ -4388,21 +4585,21 @@ function examSubCount(q) {
 
 function buildExamSections() {
   const pool = filterBankList();
-  const typeF = $('bank-filter-type').value;
-  const plan = typeF === 'all'
-    ? EXAM_PLAN
-    : [{ type: typeF, max: 50, label: TYPE_LABEL[typeF] || typeF }];
   const sections = [];
-  plan.forEach(p => {
-    const qs = shuffle(pool.filter(q => q.type === p.type)).slice(0, p.max);
-    if (qs.length) sections.push({ type: p.type, label: p.label, list: qs });
+  examPlanParts().forEach(part => {
+    part.groups.forEach(g => {
+      const qs = shuffle(pool.filter(q => groupMatch(g, q))).slice(0, g.max || 99);
+      if (qs.length) sections.push({ part: part.label, label: g.label, kind: g.kind, points: g.points || 0, list: qs });
+    });
   });
   return sections;
 }
 
 /* 按题库筛选条件组卷；返回是否有题可组 */
 function prepareBankPaper() {
+  const parts = examPlanParts();
   const sections = buildExamSections();
+  exam.parts = parts;
   exam.sections = sections;
   exam.paper = [];
   sections.forEach(s => s.list.forEach(q => exam.paper.push({ q, id: uid(), section: s, el: null })));
@@ -4419,6 +4616,7 @@ function openExam() {
   exam.stats = null;
   exam.listenState = {};
   exam.sections = [];
+  exam.parts = [];
   exam.paper = [];
   exam.bankEmpty = false;
   if (exam.source === 'bank') prepareBankPaper();
@@ -4475,17 +4673,40 @@ function renderExamSetup() {
   const isAI = exam.source === 'ai';
   const totalQ = exam.paper.length;
   const totalSub = exam.paper.reduce((n, r) => n + examSubCount(r.q), 0);
-  const secHtml = isAI
-    ? examAIPlan().map(s => `<li><b>${esc(s.label)}</b><span class="muted">${esc(aiPlanTarget(s))}</span></li>`).join('')
-    : exam.sections.map(s => {
+  const secPointsOf = s => (s.points > 0 ? s.points : s.list.reduce((n, q) => n + examSubCount(q), 0));
+  let secHtml = '';
+  let planTotal = 0;
+  if (isAI) {
+    secHtml = examAIPlan().map(p => {
+      planTotal += p.points;
+      const items = p.groups.map(g =>
+        `<li><b>${esc(g.label)}</b><span class="muted">${esc(aiPlanTarget(g))}</span></li>`).join('');
+      return `<li class="exam-part-row"><b>${esc(p.label)}</b><span>${p.points} 分</span></li>${items}`;
+    }).join('');
+  } else {
+    secHtml = (exam.parts || []).map(p => {
+      const items = p.groups.map(g => {
+        const s = (exam.sections || []).find(x => x.part === p.label && x.label === g.label);
+        if (!s) {
+          return `<li class="miss"><b>${esc(g.label)}</b><span class="muted">题库暂无 · ${g.points} 分不计</span></li>`;
+        }
         const subs = s.list.reduce((n, q) => n + examSubCount(q), 0);
-        return `<li><b>${esc(s.label)}</b><span class="muted">${s.list.length} 题 · ${subs} 小题</span></li>`;
+        const pts = secPointsOf(s);
+        planTotal += pts;
+        return `<li><b>${esc(s.label)}</b><span class="muted">${s.list.length} 题 · ${subs} 小题 · ${pts} 分</span></li>`;
       }).join('');
+      const partPts = p.groups.reduce((n, g) => {
+        const s = (exam.sections || []).find(x => x.part === p.label && x.label === g.label);
+        return n + (s ? secPointsOf(s) : 0);
+      }, 0);
+      return `<li class="exam-part-row"><b>${esc(p.label)}</b><span>${partPts} / ${p.points} 分</span></li>${items}`;
+    }).join('');
+  }
   const headLine = isAI
-    ? 'AI 将现场命题，组成一套<b>全新</b>试卷'
+    ? `AI 将现场命题，组成一套<b>全新</b>试卷 · 满分 <b>${planTotal}</b> 分`
     : exam.bankEmpty
       ? '<b>没有可组卷的题目</b>：请调整题库筛选条件，或改用 AI 全新出卷'
-      : `本卷共 <b>${totalQ}</b> 题、<b>${totalSub}</b> 个计分小题${totalSub ? '' : '（作文交卷后由 AI 批改）'}`;
+      : `本卷满分 <b>${planTotal}</b> 分 · 共 <b>${totalQ}</b> 题、<b>${totalSub}</b> 个计分小题${totalSub ? '' : '（作文交卷后由 AI 批改给分）'}`;
   $('exam-sub').textContent = isAI
     ? 'AI 全新出卷 · 不写入题库'
     : `按题库筛选条件自动组卷 · 共 ${totalQ} 题`;
@@ -4530,20 +4751,34 @@ function renderExamSetup() {
 function renderExamQuestion(q) {
   if (q.type === 'choice') return renderChoice(q);
   if (q.type === 'reading') return renderReading(q);
-  if (q.type === 'cloze') return renderCloze(q, { useOptions: true, locked: true });
+  if (q.type === 'cloze') return renderCloze(q, { useOptions: !q.noOptions, locked: true });
   if (q.type === 'verb') return renderVerb(q, { useOptionsVerb: true, locked: true });
   if (q.type === 'listening') return renderListening(q);
   if (q.type === 'writing') return renderWriting(q);
   return '<div class="ai-error">未知题型</div>';
 }
 
+/* 题型组分值：题库缺题导致小题数不足时，仍按题型满分计（每小题等分） */
+function sectionPoints(s) {
+  if (s.points > 0) return s.points;
+  return s.list.reduce((n, q) => n + examSubCount(q), 0);
+}
+function examPartPoints(partLabel) {
+  return (exam.sections || []).reduce((n, s) => n + (s.part === partLabel ? sectionPoints(s) : 0), 0);
+}
+
 function renderExamPaper() {
   let html = '';
   let cur = null;
+  let curPart = null;
   let secIdx = 0;
   exam.paper.forEach(rec => {
     if (rec.section !== cur) {
       if (cur) html += '</section>';
+      if (rec.section.part !== curPart) {
+        curPart = rec.section.part;
+        html += `<div class="exam-part-head"><span class="ep-title">${esc(curPart)}</span><span class="ep-points">共 ${examPartPoints(curPart)} 分</span></div>`;
+      }
       cur = rec.section;
       secIdx++;
       const subs = cur.list.reduce((n, q) => n + examSubCount(q), 0);
@@ -4551,7 +4786,7 @@ function renderExamPaper() {
         <div class="exam-sec-head">
           <span class="eh-num">${secIdx < 10 ? '0' + secIdx : secIdx}</span>
           <span class="eh-title">${esc(cur.label)}</span>
-          <span class="eh-note">${cur.list.length} 题 · ${subs} 小题</span>
+          <span class="eh-note">${cur.list.length} 题 · ${subs} 小题 · ${sectionPoints(cur)} 分</span>
         </div>`;
     }
     html += `<div class="exam-q" data-eid="${rec.id}">${renderExamQuestion(rec.q)}</div>`;
@@ -4600,24 +4835,26 @@ async function generateExamSections() {
   if (btn) { btn.disabled = true; btn.textContent = 'AI 出卷中…'; }
   const sections = [];
   const errors = [];
+  const flat = [];
+  plan.forEach(p => p.groups.forEach(g => flat.push(Object.assign({ part: p.label }, g))));
   try {
-    for (let i = 0; i < plan.length; i++) {
-      const spec = plan[i];
-      setNote(`正在生成：${spec.label}（${i + 1}/${plan.length}）…`);
+    for (let i = 0; i < flat.length; i++) {
+      const g = flat[i];
+      setNote(`正在生成：${g.label}（${i + 1}/${flat.length}）…`);
       const list = [];
-      for (const job of spec.jobs) {
+      for (const job of (g.jobs || [])) {
         try {
-          const got = await generateQuestions(spec.type, {
+          const got = await generateQuestions(g.kind, {
             topic: exam.ai.topic, difficulty: exam.ai.difficulty,
             count: job.count, level: job.level || 'A',
             listeningSub: job.sub, extra: job.extra || ''
           });
           list.push(...got);
         } catch (err) {
-          errors.push(`${spec.label}：${err.message}`);
+          errors.push(`${g.label}：${err.message}`);
         }
       }
-      if (list.length) sections.push({ type: spec.type, label: spec.label, list });
+      if (list.length) sections.push({ part: g.part, label: g.label, kind: g.kind, points: g.points || 0, list });
     }
   } finally {
     exam.generating = false;
@@ -4640,6 +4877,7 @@ async function beginExam() {
   if (exam.source === 'ai') {
     const sections = await generateExamSections();
     if (!sections.length) return;
+    exam.parts = examAIPlan();
     exam.sections = sections;
     exam.paper = [];
     sections.forEach(s => s.list.forEach(q => exam.paper.push({ q, id: uid(), section: s, el: null })));
@@ -4702,7 +4940,15 @@ function countExamAnswered() {
     if (q.type === 'choice') {
       total++; if (has('.q-options .q-option.chosen')) done++;
     } else if (q.type === 'reading') {
-      (q.questions || []).forEach((sq, i) => { total++; if (has(`.q-options[data-sidx="${i}"] .q-option.chosen`)) done++; });
+      if (q.mode === 'open') {
+        (q.questions || []).forEach((_, i) => {
+          total++;
+          const inp = el.querySelector(`input.ra-input[data-sidx="${i}"]`);
+          if (inp && inp.value.trim()) done++;
+        });
+      } else {
+        (q.questions || []).forEach((sq, i) => { total++; if (has(`.q-options[data-sidx="${i}"] .q-option.chosen`)) done++; });
+      }
     } else if (q.type === 'cloze') {
       const allOpts = (q.blanks || []).every(b => Array.isArray(b.options) && b.options.length >= 2);
       (q.blanks || []).forEach((b, i) => {
@@ -4747,6 +4993,40 @@ function finishExam(auto) {
   gradeExam();
 }
 
+/* 书面表达 20 分：从 AI 批改结果里解析【总分】X / 20 */
+function readEssayScore() {
+  const rec = exam.paper.find(r => r.q && r.q.type === 'writing');
+  if (!rec || !rec.el) return null;
+  const box = rec.el.querySelector('.writing-appreciation');
+  const txt = box ? box.textContent || '' : '';
+  const m = txt.match(/(?:总分|得分|score)\s*[：:]?\s*(\d+(?:\.\d+)?)\s*[\/／]\s*20/i);
+  if (m) return clamp(parseFloat(m[1]), 0, 20);
+  return null;
+}
+
+/* 阅读表达（简答）宽松判分：归一化后精确 / 包含 / 关键词重合 */
+function answerTextOf(a) { return Array.isArray(a) ? a.join(' / ') : String(a == null ? '' : a); }
+function normalizeAnswerText(s) {
+  return String(s == null ? '' : s).toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function matchOpenAnswer(input, answer) {
+  const inp = normalizeAnswerText(input);
+  if (!inp) return false;
+  const wordsIn = inp.split(' ').filter(Boolean);
+  const variants = (Array.isArray(answer) ? answer : [answer]).map(normalizeAnswerText).filter(Boolean);
+  for (const v of variants) {
+    if (inp === v) return true;
+    if (v.includes(inp) && inp.length >= 6) return true;
+    if (inp.includes(v)) return true;
+    const vw = v.split(' ').filter(w => w.length > 2);
+    if (vw.length && inp.length >= 6) {
+      const hit = vw.filter(w => wordsIn.includes(w)).length;
+      if (hit / vw.length >= 0.6) return true;
+    }
+  }
+  return false;
+}
+
 function gradeExam() {
   if (exam.graded) return;
   exam.graded = true;
@@ -4759,15 +5039,44 @@ function gradeExam() {
   const secMap = new Map();
   exam.paper.forEach(rec => {
     const r = gradeExamQuestion(rec);
-    const row = secMap.get(rec.section) || { label: rec.section.label, total: 0, correct: 0 };
+    let row = secMap.get(rec.section);
+    if (!row) {
+      row = { section: rec.section, label: rec.section.label, part: rec.section.part, total: 0, correct: 0 };
+      secMap.set(rec.section, row);
+    }
     row.total += r.total;
     row.correct += r.correct;
-    secMap.set(rec.section, row);
     total += r.total;
     right += r.correct;
   });
-  const secRows = exam.sections.map(s => secMap.get(s)).filter(Boolean);
-  exam.stats = { total, right, secRows, used };
+  const secRows = exam.sections.map(s => {
+    const row = secMap.get(s);
+    if (!row) return null;
+    row.points = sectionPoints(s);
+    // 题型满分按小题等分；作文无小题，交卷后由 AI 批改给分
+    row.perSub = (row.total && s.points > 0) ? s.points / row.total : 1;
+    row.earned = row.correct * row.perSub;
+    row.writing = s.kind === 'writing';
+    if (row.writing) { row.earned = 0; row.pending = true; }
+    return row;
+  }).filter(Boolean);
+  const essay = readEssayScore();
+  secRows.forEach(r => {
+    if (!r.writing) return;
+    if (essay != null) { r.earned = essay; r.pending = false; }
+  });
+  const partMap = new Map();
+  secRows.forEach(r => {
+    const key = r.part || '';
+    let p = partMap.get(key);
+    if (!p) { p = { label: key, points: 0, earned: 0 }; partMap.set(key, p); }
+    p.points += r.points;
+    p.earned += r.earned;
+  });
+  const parts = (exam.parts || []).map(p => partMap.get(p.label)).filter(Boolean);
+  const pointsTotal = secRows.reduce((n, r) => n + r.points, 0);
+  const pointsEarned = secRows.reduce((n, r) => n + r.earned, 0);
+  exam.stats = { total, right, secRows, parts, pointsTotal, pointsEarned, essayScore: essay, used };
 
   exam.paper.forEach(rec => {
     if (!rec.el) return;
@@ -4821,6 +5130,22 @@ function gradeExamQuestion(rec) {
     pushResult(buildResultBox(q, chosen ? val : '（未作答）', ok));
 
   } else if (q.type === 'reading') {
+    if (q.mode === 'open') {
+      (q.questions || []).forEach((sq, i) => {
+        total++;
+        const inp = root.querySelector(`input.ra-input[data-sidx="${i}"]`);
+        const val = inp ? inp.value.trim() : '';
+        const ok = matchOpenAnswer(val, sq.answer);
+        if (ok) correct++;
+        recordItem(q, ok, sq.point || q.point);
+        if (inp) { inp.disabled = true; inp.classList.add(ok ? 'correct' : 'wrong'); }
+        subResult(`.sub-result[data-sidx="${i}"]`,
+          `<div class="explain-box${ok ? '' : ' ai'}"><div class="head">${head(ok, !!val)}</div>` +
+          `<div style="margin-bottom:4px">你的答案：<b>${esc(val || '（空）')}</b> ｜ 参考答案：<b>${esc(answerTextOf(sq.answer))}</b></div>` +
+          `${sq.explanation ? esc(sq.explanation) : '（无解析）'}</div>`);
+      });
+      return { total, correct };
+    }
     (q.questions || []).forEach((sq, i) => {
       total++;
       const opts = optsOf(`.q-options[data-sidx="${i}"] .q-option`);
@@ -4944,12 +5269,48 @@ function gradeExamQuestion(rec) {
   return { total, correct };
 }
 
+function fmtPts(n) {
+  const v = Math.round((n || 0) * 10) / 10;
+  return Number.isInteger(v) ? String(v) : v.toFixed(1);
+}
+
+/* 作文 AI 批改完成后回填书面表达得分并刷新报告 */
+function applyEssayScoreToReport() {
+  if (!exam.graded || !exam.stats) return;
+  const score = readEssayScore();
+  if (score == null) return;
+  const row = exam.stats.secRows.find(r => r.writing);
+  if (!row || (!row.pending && row.earned === score)) return;
+  row.earned = score;
+  row.pending = false;
+  exam.stats.essayScore = score;
+  exam.stats.parts.forEach(p => {
+    p.earned = exam.stats.secRows.filter(r => r.part === p.label).reduce((n, r) => n + r.earned, 0);
+  });
+  exam.stats.pointsEarned = exam.stats.secRows.reduce((n, r) => n + r.earned, 0);
+  renderExamReport();
+}
+
 function renderExamReport() {
-  const st = exam.stats || { total: 0, right: 0, secRows: [], used: 0 };
+  const st = exam.stats || { total: 0, right: 0, secRows: [], parts: [], pointsTotal: 0, pointsEarned: 0, used: 0 };
   const pct = st.total ? Math.round(st.right / st.total * 100) : null;
   const answered = countExamAnswered();
-  const rowsHtml = st.secRows.map(r =>
-    `<tr><td>${esc(r.label)}</td><td>${r.total}</td><td>${r.correct}</td><td>${r.total ? Math.round(r.correct / r.total * 100) + '%' : '—'}</td></tr>`).join('');
+  const parts = st.parts || [];
+  const covered = new Set();
+  let rowsHtml = '';
+  parts.forEach(p => {
+    rowsHtml += `<tr class="part-row"><td colspan="3">${esc(p.label)}</td><td><b>${fmtPts(p.earned)} / ${fmtPts(p.points)} 分</b></td></tr>`;
+    st.secRows.filter(r => r.part === p.label).forEach(r => {
+      covered.add(r);
+      const score = r.writing
+        ? (r.pending ? `待 AI 批改 0 / ${fmtPts(r.points)}` : `${fmtPts(r.earned)} / ${fmtPts(r.points)}`)
+        : `${fmtPts(r.earned)} / ${fmtPts(r.points)}`;
+      rowsHtml += `<tr><td>${esc(r.label)}</td><td>${r.writing ? '—' : r.total}</td><td>${r.writing ? '—' : r.correct}</td><td>${score}</td></tr>`;
+    });
+  });
+  st.secRows.filter(r => !covered.has(r)).forEach(r => {
+    rowsHtml += `<tr><td>${esc(r.label)}</td><td>${r.total}</td><td>${r.correct}</td><td>${fmtPts(r.earned)} / ${fmtPts(r.points)}</td></tr>`;
+  });
   const wrongCount = st.total - st.right;
   const autoW = !!(settings && settings.autoWrong !== false);
   const writingRec = exam.paper.find(r => r.q.type === 'writing');
@@ -4960,7 +5321,7 @@ function renderExamReport() {
     const words = txt ? txt.split(/\s+/).filter(Boolean).length : 0;
     essayHtml = `<div class="row" style="margin-top:10px">
       <button class="btn sm" id="exam-essay-jump">查看 / AI 批改作文</button>
-      <span class="muted small">${txt ? `作文已写 <b>${words}</b> 词，交卷后可提交 AI 批改` : '作文未填写'}</span>
+      <span class="muted small">${txt ? `作文已写 <b>${words}</b> 词 · 书面表达 20 分${st.essayScore == null ? '，交卷后提交 AI 批改给分' : ` · AI 批改得分 <b>${fmtPts(st.essayScore)}</b> 分`}` : '作文未填写 · 书面表达 20 分计 0'}</span>
     </div>`;
   }
   const saveHtml = exam.source === 'ai'
@@ -4973,10 +5334,12 @@ function renderExamReport() {
   el.innerHTML = `
     <div class="exam-report-top">
       <div>
-        <div class="exam-score">${st.total ? st.right + '<small> / ' + st.total + ' 小题</small>' : '作文卷'}</div>
+        <div class="exam-score">${st.pointsTotal
+          ? fmtPts(st.pointsEarned) + '<small> / ' + fmtPts(st.pointsTotal) + ' 分</small>'
+          : (st.total ? st.right + '<small> / ' + st.total + ' 小题</small>' : '作文卷')}</div>
         <div class="muted small" style="margin-top:6px">
           ${exam.source === 'ai' ? 'AI 全新出卷' : '题库组卷'}
-          · ${pct == null ? '本卷无客观计分题' : '正确率 ' + pct + '%（错 ' + wrongCount + ' 小题）'}
+          · ${pct == null ? '本卷无客观计分题' : '正确率 ' + pct + '%（错 ' + wrongCount + ' 小题 · ' + st.right + '/' + st.total + ' 小题）'}
           · 用时 ${examTimerText(st.used)}${exam.remaining <= 0 ? ' · 时间到自动交卷' : ''}
           · 已作答 ${answered.done}/${answered.total} 处
         </div>
@@ -4987,8 +5350,10 @@ function renderExamReport() {
       </div>
     </div>
     <table class="exam-sec-table">
-      <thead><tr><th>题型</th><th>小题</th><th>正确</th><th>正确率</th></tr></thead>
-      <tbody>${rowsHtml || '<tr><td colspan="4">本卷无客观题</td></tr>'}</tbody>
+      <thead><tr><th>部分 / 题型</th><th>小题</th><th>正确</th><th>得分</th></tr></thead>
+      <tbody>${rowsHtml || '<tr><td colspan="4">本卷无客观题</td></tr>'}
+        <tr class="total-row"><td>总分</td><td>${st.total}</td><td>${st.right}</td><td><b>${fmtPts(st.pointsEarned)} / ${fmtPts(st.pointsTotal)} 分</b></td></tr>
+      </tbody>
     </table>
     ${wrongCount > 0
       ? `<p class="small muted">做错的 ${wrongCount} 个小题${autoW ? '已自动加入错题本' : '未加入错题本（设置中已关闭自动加错题）'}。</p>`
@@ -5114,8 +5479,9 @@ function renderChoice(q) {
     </div>`;
 }
 
-/* ---- 阅读理解渲染 ---- */
+/* ---- 阅读理解 / 阅读表达渲染 ---- */
 function renderReading(q) {
+  if (q.mode === 'open') return renderReadingOpen(q);
   return `
     <div class="q-card">
       <div class="q-meta">
@@ -5137,10 +5503,34 @@ function renderReading(q) {
     </div>`;
 }
 
+/* ---- 阅读表达（根据文章回答问题）渲染 ---- */
+function renderReadingOpen(q) {
+  return `
+    <div class="q-card">
+      <div class="q-meta">
+        <span class="tag accent">阅读表达</span>
+        <span class="tag blue">回答问题</span>
+        <span class="tag">难度 ${starLabel(q.difficulty)}</span>
+        <span class="tag">共 ${q.questions.length} 问</span>
+      </div>
+      <h3 style="font-family:var(--serif);font-size:17px;margin:0 0 12px;font-weight:600">${esc(q.title || '阅读表达')}</h3>
+      <div class="passage" data-hl-zone="${esc((q.id || 'q') + ':readanswer')}">${esc(q.passage)}</div>
+      ${q.questions.map((sq, qi) => `
+        <div class="sub-q" data-sidx="${qi}">
+          <p class="sub-q-text"><span class="sub-q-head">Q${qi+1}.</span>${esc(sq.question)}</p>
+          <input class="ra-input" type="text" data-sidx="${qi}" placeholder="用英文回答…" autocomplete="off" spellcheck="false">
+          <div class="sub-result" data-sidx="${qi}" style="margin-top:10px"></div>
+        </div>`).join('')}
+      <div class="q-result-area"></div>
+    </div>`;
+}
+
 /* ---- 综合填空渲染（支持四选一 / 自由填词） ---- */
 function renderCloze(q, ctx) {
   ctx = ctx || {};
   const locked = !!ctx.locked;
+  const kind = qKind(q);
+  const isSeven = kind === 'seven';
   const useOptions = (ctx.useOptions !== undefined ? ctx.useOptions : practice.state.useOptions) !== false;
   const allHaveOptions = q.blanks.every(b => Array.isArray(b.options) && b.options.length >= 2);
 
@@ -5157,21 +5547,24 @@ function renderCloze(q, ctx) {
       const b = q.blanks[n] || {};
       const pos = normalizePos(b.pos);
       const posTag = pos ? `<span class="pos-hint" title="该空应填${pos}">（${esc(pos)}）</span>` : '';
-      return `<input class="inline-input" type="text" data-cidx="${n}" placeholder="${n+1}" autocomplete="off" spellcheck="false">${posTag}`;
+      const hintTag = b.hint ? `<span class="hint-word" title="提示">${esc(b.hint)}</span>` : '';
+      return `${hintTag}<input class="inline-input" type="text" data-cidx="${n}" placeholder="${n+1}" autocomplete="off" spellcheck="false">${posTag}`;
     });
   }
 
   const toolbar = locked
-    ? `<div class="cloze-toolbar"><span class="muted">${allHaveOptions ? '考试模式：每空从 ABCD 中选择' : '考试模式：此篇未提供选项，请自己填写单词'}</span></div>`
+    ? `<div class="cloze-toolbar"><span class="muted">${allHaveOptions
+        ? (isSeven ? '考试模式：每空从 A-G 选项中选择句子' : '考试模式：每空从选项中选择')
+        : '考试模式：此篇未提供选项，请自己填写单词'}</span></div>`
     : `
     <div class="cloze-toolbar">
       <label class="switch-inline" style="margin:0;padding:8px 12px">
         <input type="checkbox" id="cloze-use-options"${useOptions && allHaveOptions ? ' checked' : ''}${allHaveOptions ? '' : ' disabled'}>
-        <span>四选一模式</span>
+        <span>${isSeven ? '选择句子模式' : '四选一模式'}</span>
       </label>
       <span class="muted">
         ${allHaveOptions
-          ? (useOptions ? '每个空从 ABCD 中选择' : '每个空自己填写单词')
+          ? (useOptions ? (isSeven ? '每个空从 A-G 的句子中选择' : '每个空从选项中选择') : '每个空自己填写单词')
           : '此篇未提供选项，只能自由填词'}
       </span>
     </div>`;
@@ -5190,7 +5583,7 @@ function renderCloze(q, ctx) {
   return `
     <div class="q-card">
       <div class="q-meta">
-        <span class="tag accent">综合填空</span>
+        <span class="tag accent">${esc(kindLabel(q))}</span>
         <span class="tag">难度 ${starLabel(q.difficulty)}</span>
         <span class="tag">共 ${q.blanks.length} 空</span>
       </div>
@@ -5796,6 +6189,47 @@ $('bank-question-area').addEventListener('blur', e => {
   checkClozeInput(q);
 }, true);
 
+/* 阅读表达失焦 / 回车判定（练习模式） */
+$('bank-question-area').addEventListener('blur', e => {
+  const inp = e.target.closest('input.ra-input');
+  if (!inp) return;
+  const q = practice.list[practice.pos];
+  if (!q || q.type !== 'reading' || q.mode !== 'open') return;
+  if (!inp.value.trim()) return;
+  checkReadingOpen(q);
+}, true);
+$('bank-question-area').addEventListener('keydown', e => {
+  const inp = e.target.closest('input.ra-input');
+  if (!inp || e.key !== 'Enter') return;
+  e.preventDefault();
+  const q = practice.list[practice.pos];
+  if (q && q.type === 'reading' && q.mode === 'open') checkReadingOpen(q);
+});
+
+function checkReadingOpen(q) {
+  const area = $('bank-question-area');
+  q.questions.forEach((sq, i) => {
+    if (practice.state.subAnswered.has(i)) return;
+    const inp = area.querySelector(`input.ra-input[data-sidx="${i}"]`);
+    if (!inp || !inp.value.trim()) return;
+    const val = inp.value.trim();
+    const ok = matchOpenAnswer(val, sq.answer);
+    practice.state.subAnswered.add(i);
+    recordItem(q, ok, sq.point || q.point);
+    if (ok) practice.right++;
+    $('bank-right').textContent = practice.right;
+    inp.disabled = true;
+    inp.classList.add(ok ? 'correct' : 'wrong');
+    const res = area.querySelector(`.sub-q[data-sidx="${i}"] .sub-result`);
+    if (res) res.innerHTML = `<div class="explain-box${ok ? '' : ' ai'}">
+      <div class="head">${ok ? '✅ 正确' : '❌ 错误'}</div>
+      <div style="margin-bottom:4px">你的答案：<b>${esc(val)}</b> ｜ 参考答案：<b>${esc(answerTextOf(sq.answer))}</b></div>
+      ${sq.explanation ? esc(sq.explanation) : '（无解析）'}
+    </div>`;
+  });
+  if (practice.state.subAnswered.size === q.questions.length) practice.answered = true;
+}
+
 /* ---- 作文提交 ---- */
 async function handleWritingSubmit(q, opts) {
   opts = opts || {};
@@ -5813,6 +6247,7 @@ async function handleWritingSubmit(q, opts) {
     const text = await callChat([{ role: 'system', content: sys }, { role: 'user', content: user }], { temperature: 0.5 });
     out.innerHTML = `<div class="explain-box ai"><div class="head">🤖 AI 批改</div>${esc(text).replace(/\n/g,'<br>')}</div>`;
     status.textContent = '';
+    applyEssayScoreToReport();
   } catch (err) {
     out.innerHTML = `<div class="ai-error">批改失败：${esc(err.message)}</div>`;
     status.textContent = '';
@@ -5843,6 +6278,14 @@ $('bank-reveal').addEventListener('click', () => {
       const el = area.querySelector(`.sub-q[data-sidx="${i}"]`);
       if (!el) return;
       if (!practice.state.subAnswered.has(i)) recordItem(q, false, sq.point || q.point);
+      practice.state.subAnswered.add(i);
+      if (q.mode === 'open') {
+        const inp = el.querySelector('input.ra-input');
+        const ans = answerTextOf(sq.answer);
+        if (inp) { inp.value = ans; inp.disabled = true; inp.classList.add('correct'); }
+        el.querySelector('.sub-result').innerHTML = `<div class="explain-box"><div class="head">参考答案</div>${esc(ans)}${sq.explanation ? ' · ' + esc(sq.explanation) : ''}</div>`;
+        return;
+      }
       [...el.querySelectorAll('.q-option')].forEach(b => {
         b.disabled = true;
         if (b.dataset.val === sq.answer) b.classList.add('correct');
@@ -5973,11 +6416,19 @@ $('bank-ai-explain').addEventListener('click', async () => {
     const wrong = area.querySelector('.q-option.wrong');
     userInfo = wrong ? `学生的选择：${wrong.dataset.val}` : '学生尚未作答或已正确';
   } else if (q.type === 'reading') {
-    userInfo = q.questions.map((sq, i) => {
-      const sub = area.querySelector(`.sub-q[data-sidx="${i}"]`);
-      const wrong = sub?.querySelector('.q-option.wrong');
-      return `Q${i+1} 学生选择：${wrong ? wrong.dataset.val : '(正确/未答)'}`;
-    }).join('\n');
+    if (q.mode === 'open') {
+      userInfo = q.questions.map((sq, i) => {
+        const sub = area.querySelector(`.sub-q[data-sidx="${i}"]`);
+        const inp = sub?.querySelector('input.ra-input');
+        return `Q${i+1} 学生回答：${inp?.value || '(空)'} ｜ 参考答案：${answerTextOf(sq.answer)}`;
+      }).join('\n');
+    } else {
+      userInfo = q.questions.map((sq, i) => {
+        const sub = area.querySelector(`.sub-q[data-sidx="${i}"]`);
+        const wrong = sub?.querySelector('.q-option.wrong');
+        return `Q${i+1} 学生选择：${wrong ? wrong.dataset.val : '(正确/未答)'}`;
+      }).join('\n');
+    }
   } else if (q.type === 'cloze') {
     userInfo = q.blanks.map((b, i) => {
       const inp = area.querySelector(`input[data-cidx="${i}"]`);
@@ -6045,10 +6496,13 @@ function describeQuestionForAI(q) {
     return `题型：单项选择\n题干：${q.question}\n选项：${q.options.map((o,i)=>String.fromCharCode(65+i)+'. '+o).join('；')}\n正确答案：${q.answer}`;
   }
   if (q.type === 'reading') {
-    return `题型：阅读理解（${q.level}级）\n标题：${q.title}\n文章：${q.passage}\n题目与答案：\n${q.questions.map((sq,i)=>`Q${i+1}: ${sq.question}\n  选项：${sq.options.map((o,j)=>String.fromCharCode(65+j)+'. '+o).join('；')}\n  正确答案：${sq.answer}`).join('\n')}`;
+    if (q.mode === 'open') {
+      return `题型：阅读表达（根据文章回答问题）\n标题：${q.title}\n文章：${q.passage}\n问题与参考答案：\n${q.questions.map((sq,i)=>`Q${i+1}: ${sq.question}\n  参考答案：${answerTextOf(sq.answer)}`).join('\n')}`;
+    }
+    return `题型：阅读理解（${q.level}级）\n标题：${q.title}\n文章：${q.passage}\n题目与答案：\n${q.questions.map((sq,i)=>`Q${i+1}: ${sq.question}\n  选项：${(sq.options||[]).map((o,j)=>String.fromCharCode(65+j)+'. '+o).join('；')}\n  正确答案：${sq.answer}`).join('\n')}`;
   }
   if (q.type === 'cloze') {
-    return `题型：综合填空\n文章：${q.passage}\n空格答案：${q.blanks.map((b,i)=>`[${i+1}] ${b.answer}`).join('；')}`;
+    return `题型：${kindLabel(q)}\n文章：${q.passage}\n空格答案：${q.blanks.map((b,i)=>`[${i+1}] ${b.answer}${b.hint ? `（首字母 ${b.hint}）` : ''}${b.pos ? `（${b.pos}）` : ''}`).join('；')}`;
   }
   if (q.type === 'verb') {
     return `题型：动词填空\n${q.sentences.map((s,i)=>`${i+1}. ${s.text}\n   答案：${s.answer}`).join('\n')}`;
@@ -6117,13 +6571,30 @@ function buildVocabBlock() {
 /* 各题型必须落到 JSON 里的字段要求（写进用户消息，不受已保存的自定义提示词影响） */
 function buildFieldRules(type) {
   let out = '';
-  if (['choice', 'reading', 'cloze', 'verb', 'listening'].includes(type)) {
+  if (['choice', 'reading', 'cloze', 'verb', 'listening', 'seven', 'fillgap', 'readanswer'].includes(type)) {
     out += `- 每道小题（或每道题）必须提供 point 字段：该题考查的语法/知识点，简短中文，如「一般过去时」「宾语从句」「固定搭配」「词义辨析」；若无明显考点写「综合」。\n`;
   }
   if (['choice', 'reading', 'cloze', 'listening'].includes(type)) {
     out += `- 正确答案的选项位置（A/B/C/D）请尽量均匀分散，避免连续多题正确答案落在同一字母。\n`;
   }
-  if (type === 'cloze') {
+  if (type === 'seven') {
+    out += `- passage 中 ___ 的数量必须等于 blanks 数量（5 个）。
+- 每个空必须有 7 个选项（A-G：5 个入文 + 2 个干扰），同一题内所有 blank 的 options 内容与顺序完全一致。
+- answer 必须与该空 options 中的某一项完全一致；正确答案尽量分散在 A-G 中，不要总落在靠前的字母。
+`;
+  }
+  if (type === 'fillgap') {
+    out += `- passage 中 ___ 的数量必须等于 blanks 数量（建议 10 个）。
+- 不要给出 options；每个空必须有 answer（单词）、hint（answer 的首字母，小写）与 pos。
+- 学生会看到首字母提示后自己填写，answer 在语境中应唯一。
+`;
+  }
+  if (type === 'readanswer') {
+    out += `- questions 中不要给 options；每题必须有 question（英文提问）、answer（英文参考答案，可用字符串数组给出多种可接受写法）与 explanation（中文）。
+- 答案应简明，避免整段照抄原文。
+`;
+  }
+  if (type === 'cloze' || type === 'fillgap') {
     out += `- 每个空必须给出 pos 字段：该空答案的词性，取值只能是 名词 / 动词 / 形容词 / 副词 / 数词 / 冠词 / 代词 / 介词 / 连词。
 - 如果该空答案是代词、介词或连词，pos 必须为空字符串 ""（这三类不做提示）。
 - pos 会在学生自由填词（非四选一）时显示成「（名词）」这样的提示，请务必判断准确，避免同一个空出现多种可接受答案。
@@ -6135,10 +6606,17 @@ function buildFieldRules(type) {
 
 function buildPromptForType(type, topic, difficulty, count, level, listeningSub) {
   const sys = settings.prompts[type];
-  const typeMap = { choice:'单项选择', reading:'阅读理解', cloze:'综合填空', verb:'动词填空', listening:'听力题', writing:'作文' };
+  const typeMap = {
+    choice:'单项选择', reading:'阅读理解', cloze:'完形填空', verb:'动词填空', listening:'听力题', writing:'作文',
+    seven:'阅读七选五（七选五 / 六选五）', fillgap:'短文填空（首字母 / 语境填词）', readanswer:'阅读表达（根据文章回答问题）'
+  };
   const diffDesc = { 1:'入门（小学）', 2:'简单（初中）', 3:'中等（高中）', 4:'较难（四级）', 5:'困难（六级/雅思）' }[difficulty] || '中等';
+  const unit = { reading:'篇', seven:'篇', cloze:'篇', fillgap:'篇', readanswer:'篇', writing:'篇', verb:'篇' }[type] || '道';
   let extra = '';
   if (type === 'reading') extra = `- 阅读级别：${level || 'A'} 级\n`;
+  if (type === 'seven') extra = `- 每篇含 5 个空、7 个备选句子（A-G）\n`;
+  if (type === 'fillgap') extra = `- 每篇含 10 个空，只给首字母提示，不给选项\n`;
+  if (type === 'readanswer') extra = `- 每篇含 3-4 个问题\n`;
   if (type === 'listening') {
     const subMap = { short_dialogue:'short_dialogue（短对话问答，5组）', long_dialogue:'long_dialogue（长对话理解，3-5小题）', table:'table（听力填表）' };
     extra = `- 听力子题型：${subMap[listeningSub] || 'short_dialogue'}\n`;
@@ -6149,7 +6627,7 @@ function buildPromptForType(type, topic, difficulty, count, level, listeningSub)
 - 题型：${typeMap[type] || type}
 - 主题：${topic || '日常通用'}
 - 难度：${diffDesc}（${difficulty} 星）
-- 数量：${count} 道
+- 数量：${count} ${unit}
 ${extra}${vocab}${rules}
 请严格按系统消息中的 JSON 格式返回，不要包含任何 Markdown 代码块或额外解释。`;
   return { sys, user };
@@ -6169,14 +6647,20 @@ async function generateQuestions(type, opts) {
     else if (parsed && typeof parsed === 'object') parsed = [parsed];
   }
   if (!Array.isArray(parsed)) throw new Error('返回不是数组');
+  const DATA_KIND = { seven: 'cloze', fillgap: 'cloze', readanswer: 'reading' };
   const list = parsed.map(item => {
-    if (item && !item.type) item.type = type;
-    if (item && item.difficulty == null) item.difficulty = difficulty;
-    if (type === 'listening' && item && !item.subType) item.subType = opts.listeningSub;
+    if (item) {
+      item.type = DATA_KIND[type] || item.type || type;
+      if (type === 'seven') item.seven = true;
+      if (type === 'fillgap') item.noOptions = true;
+      if (type === 'readanswer') item.mode = 'open';
+      if (item.difficulty == null) item.difficulty = difficulty;
+      if (type === 'listening' && !item.subType) item.subType = opts.listeningSub;
+    }
     return normalizeQuestion(item);
   }).filter(Boolean);
   if (!list.length) throw new Error('AI 返回的题目无法解析，请检查提示词或换模型重试');
-  spreadAnswerLetters(list);
+  if (type !== 'seven') spreadAnswerLetters(list);
   return list;
 }
 
@@ -6237,8 +6721,10 @@ function renderAIQuestions(list) {
       inner = `<h3 style="font-family:var(--serif);margin:0 0 10px">${esc(q.title)}</h3>
         <div class="passage">${esc(q.passage)}</div>
         ${q.questions.map((sq,si)=>`<div class="sub-q"><p class="sub-q-text"><span class="sub-q-head">Q${si+1}.</span>${esc(sq.question)}</p>
-          <div class="q-options">${sq.options.map((o,j)=>`<button class="q-option" disabled>${String.fromCharCode(65+j)}. ${esc(o)}</button>`).join('')}</div>
-          <div class="explain-box" style="margin-top:10px">答案：${maskAnswer(sq.answer)}${sq.explanation?' · '+maskAnswer(sq.explanation):''}</div>
+          ${q.mode === 'open'
+            ? `<div class="explain-box" style="margin-top:10px">参考答案：${maskAnswer(answerTextOf(sq.answer))}${sq.explanation?' · '+maskAnswer(sq.explanation):''}</div>`
+            : `<div class="q-options">${(sq.options||[]).map((o,j)=>`<button class="q-option" disabled>${String.fromCharCode(65+j)}. ${esc(o)}</button>`).join('')}</div>
+          <div class="explain-box" style="margin-top:10px">答案：${maskAnswer(sq.answer)}${sq.explanation?' · '+maskAnswer(sq.explanation):''}</div>`}
         </div>`).join('')}`;
     } else if (q.type === 'cloze') {
       let t = esc(q.passage); let k = 0;
@@ -6289,7 +6775,7 @@ function renderAIQuestions(list) {
     }
     return `<div class="q-card" style="margin-bottom:14px">
       <div class="q-meta">
-        <span class="tag accent">${typeLabel(q.type)}</span>
+        <span class="tag accent">${esc(kindLabel(q))}</span>
         ${q.subType ? `<span class="tag blue">${listeningSubLabel(q.subType)}</span>` : ''}
         <span class="tag">${starLabel(q.difficulty)}</span>
         <button class="reveal-all-btn" data-reveal-q="${q.id}">👁 显示答案</button>
