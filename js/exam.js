@@ -1,93 +1,75 @@
 /* =========================================================
    整卷模考
-   命题蓝图：四大部分 · 满分 120 分
-     第一部分 听力 30 分（短对话选择 10 / 长对话·短文选择 10 / 听力填表 10）
-     第二部分 阅读 40 分（阅读理解四选一 30 / 阅读七选五 10）
-     第三部分 语言运用 20 分（完形填空 10 / 短文填空 10）
-     第四部分 写作 30 分（阅读表达 10 / 书面表达 20）
+   命题蓝图（可编辑）：默认取东营实验中学卷 · 满分 120 分 / 120 分钟
+     卷Ⅰ 选择题 65 分：一、听力选择三选一 15 分（听句子 5 / 短对话 5 / 长对话 5）
+                        二、单项选择 10 分  三、阅读理解 40 分（4 篇 × 5 题 × 2 分）
+     卷Ⅱ 非选择题 55 分：四、听力填表 5 分  五、动词填空 10 分  六、综合填空 10 分
+                        七、阅读表达 10 分  八、书面表达 20 分
+     附加题型（默认不考）：完形填空 10 分 / 阅读七选五 10 分
+   每行 = 一个计分题型：vol 卷 · big 大题序 · title 题型名 · kind 题型种类
+          sub 听力子题型 · count 计分小题数 · per 每小题分值 · enabled 是否纳入 · optional 是否附加
    ========================================================= */
-const EXAM_PARTS = [
-  { label: '第一部分 · 听力', points: 30, groups: [
-    { kind: 'listening', match: q => q.subType === 'short_dialogue', label: '听短对话选择', points: 10, max: 1 },
-    { kind: 'listening', match: q => q.subType === 'long_dialogue', label: '听长对话 / 短文选择', points: 10, max: 1 },
-    { kind: 'listening', match: q => q.subType === 'table', label: '听短文填空（填表）', points: 10, max: 1 }
-  ]},
-  { label: '第二部分 · 阅读', points: 40, groups: [
-    { kind: 'reading', label: '阅读理解（四选一）', points: 30, max: 3 },
-    { kind: 'seven', label: '阅读七选五 / 六选五', points: 10, max: 1 }
-  ]},
-  { label: '第三部分 · 语言运用', points: 20, groups: [
-    { kind: 'cloze', label: '完形填空', points: 10, max: 1 },
-    { kind: 'fillgap', label: '短文填空（首字母 / 语境填词）', points: 10, max: 1 }
-  ]},
-  { label: '第四部分 · 写作', points: 30, groups: [
-    { kind: 'readanswer', label: '阅读表达（根据文章回答问题）', points: 10, max: 1 },
-    { kind: 'writing', label: '书面表达（话题作文）', points: 20, max: 1 }
-  ]}
+const EXAM_DEFAULT_ROWS = [
+  { id:'listen-sentence', vol:'Ⅰ', big:'一', title:'听力 · 听句子选答语', kind:'listening', sub:'sentence',      count:5,  per:1, enabled:true,  optional:false },
+  { id:'listen-short',    vol:'Ⅰ', big:'一', title:'听力 · 短对话问答',   kind:'listening', sub:'short_dialogue', count:5,  per:1, enabled:true,  optional:false },
+  { id:'listen-long',     vol:'Ⅰ', big:'一', title:'听力 · 长对话理解',   kind:'listening', sub:'long_dialogue',  count:5,  per:1, enabled:true,  optional:false },
+  { id:'choice',          vol:'Ⅰ', big:'二', title:'单项选择（四选一）',  kind:'choice',    sub:'',               count:10, per:1, enabled:true,  optional:false },
+  { id:'reading',         vol:'Ⅰ', big:'三', title:'阅读理解（四选一）',  kind:'reading',   sub:'',               count:20, per:2, enabled:true,  optional:false },
+  { id:'listen-table',    vol:'Ⅱ', big:'四', title:'听力填表',           kind:'listening', sub:'table',          count:5,  per:1, enabled:true,  optional:false },
+  { id:'verb',            vol:'Ⅱ', big:'五', title:'动词填空',           kind:'verb',      sub:'',               count:10, per:1, enabled:true,  optional:false },
+  { id:'fillgap',         vol:'Ⅱ', big:'六', title:'综合填空（首字母）',  kind:'fillgap',   sub:'',               count:10, per:1, enabled:true,  optional:false },
+  { id:'readanswer',      vol:'Ⅱ', big:'七', title:'阅读表达',           kind:'readanswer',sub:'',               count:5,  per:2, enabled:true,  optional:false },
+  { id:'writing',         vol:'Ⅱ', big:'八', title:'书面表达',           kind:'writing',   sub:'',               count:1,  per:20,enabled:true,  optional:false },
+  { id:'cloze',           vol:'附', big:'加', title:'完形填空（四选一）',  kind:'cloze',     sub:'',               count:10, per:1, enabled:false, optional:true },
+  { id:'seven',           vol:'附', big:'加', title:'阅读七选五',         kind:'seven',     sub:'',               count:5,  per:2, enabled:false, optional:true }
 ];
+const EXAM_VOL_LABEL = { 'Ⅰ': '卷Ⅰ · 选择题', 'Ⅱ': '卷Ⅱ · 非选择题', '附': '附加题型' };
+const EXAM_BLUEPRINT_KEY = 'eng_exam_blueprint_v1';
 
-/* AI 全新出卷：与蓝图同结构，jobs 逐个调用 AI，合并进同一题型 */
-const EXAM_AI_PLAN = [
-  { label: '第一部分 · 听力', points: 30, groups: [
-    { kind: 'listening', label: '听短对话选择', points: 10, jobs: [{ count: 1, sub: 'short_dialogue' }] },
-    { kind: 'listening', label: '听长对话 / 短文选择', points: 10, jobs: [{ count: 1, sub: 'long_dialogue' }] },
-    { kind: 'listening', label: '听短文填空（填表）', points: 10, jobs: [{ count: 1, sub: 'table' }] }
-  ]},
-  { label: '第二部分 · 阅读', points: 40, groups: [
-    { kind: 'reading', label: '阅读理解（四选一）', points: 30, jobs: [{ count: 3, extra: '- 请生成 3 篇完整的阅读理解：JSON 数组长度必须为 3，每篇含 3-5 个小题。\n' }] },
-    { kind: 'seven', label: '阅读七选五 / 六选五', points: 10, jobs: [{ count: 1 }] }
-  ]},
-  { label: '第三部分 · 语言运用', points: 20, groups: [
-    { kind: 'cloze', label: '完形填空', points: 10, jobs: [{ count: 1 }] },
-    { kind: 'fillgap', label: '短文填空（首字母 / 语境填词）', points: 10, jobs: [{ count: 1 }] }
-  ]},
-  { label: '第四部分 · 写作', points: 30, groups: [
-    { kind: 'readanswer', label: '阅读表达（根据文章回答问题）', points: 10, jobs: [{ count: 1 }] },
-    { kind: 'writing', label: '书面表达（话题作文）', points: 20, jobs: [{ count: 1 }] }
-  ]}
-];
-
-function groupMatch(g, q) { return g.match ? g.match(q) : qKind(q) === g.kind; }
-
-/* 题库筛选决定蓝图范围：选中某题型时只保留对应题型的题型组 */
-function examPlanParts() {
-  const typeF = $('bank-filter-type').value;
-  if (typeF === 'all') return EXAM_PARTS;
-  const parts = [];
-  EXAM_PARTS.forEach(p => {
-    const groups = p.groups.filter(g => g.kind === typeF);
-    if (groups.length) parts.push({ label: p.label, points: groups.reduce((n, g) => n + g.points, 0), groups });
-  });
-  if (parts.length) return parts;
-  return [{ label: KIND_LABEL[typeF] || typeF, points: 0,
-    groups: [{ kind: typeF, label: KIND_LABEL[typeF] || typeF, points: 0, max: 50 }] }];
+function cloneExamRows() { return JSON.parse(JSON.stringify(EXAM_DEFAULT_ROWS)); }
+function loadExamBlueprint() {
+  const base = cloneExamRows();
+  try {
+    const raw = localStorage.getItem(EXAM_BLUEPRINT_KEY);
+    if (!raw) return base;
+    const saved = JSON.parse(raw);
+    if (!Array.isArray(saved)) return base;
+    base.forEach(row => {
+      const s = saved.find(x => x && x.id === row.id);
+      if (!s) return;
+      if (typeof s.enabled === 'boolean') row.enabled = s.enabled;
+      row.count = clamp(parseInt(s.count, 10) || row.count, 1, 99);
+      row.per = clamp(parseFloat(s.per) || row.per, 0.5, 99);
+    });
+    return base;
+  } catch (e) { return base; }
 }
-
-function examAIPlan() {
-  const typeF = $('bank-filter-type').value;
-  if (typeF === 'all') return EXAM_AI_PLAN;
-  const parts = [];
-  EXAM_AI_PLAN.forEach(p => {
-    const groups = p.groups.filter(g => g.kind === typeF);
-    if (groups.length) parts.push({ label: p.label, points: groups.reduce((n, g) => n + g.points, 0), groups });
-  });
-  if (parts.length) return parts;
-  return [{ label: KIND_LABEL[typeF] || typeF, points: 0,
-    groups: [{ kind: typeF, label: KIND_LABEL[typeF] || typeF, points: 0, jobs: [{ count: 1 }] }] }];
+function saveExamBlueprint() {
+  try { localStorage.setItem(EXAM_BLUEPRINT_KEY, JSON.stringify(exam.blueprint)); } catch (e) {}
 }
-
-function aiPlanTarget(g) {
-  const unit = { listening: '组', reading: '篇', cloze: '篇', seven: '篇', fillgap: '篇', readanswer: '篇', writing: '篇', choice: '道', verb: '篇' }[g.kind] || '道';
-  const n = (g.jobs || []).reduce((a, j) => a + (parseInt(j.count, 10) || 0), 0);
-  const subs = g.kind === 'listening' ? '（' + g.jobs.map(j => ({ short_dialogue: '短对话', long_dialogue: '长对话', table: '填表' }[j.sub] || '听力')).join(' + ') + '）' : '';
-  return `AI 生成 ${n} ${unit}${subs} · ${g.points} 分`;
+function enabledExamRows() { return exam.blueprint.filter(r => r.enabled); }
+function designRowPoints(row) { return (row.count || 0) * (row.per || 0); }
+function designExamTotal() {
+  const vols = { 'Ⅰ': 0, 'Ⅱ': 0, '附': 0 };
+  enabledExamRows().forEach(r => { vols[r.vol] = (vols[r.vol] || 0) + designRowPoints(r); });
+  return vols;
+}
+function examRowMatch(row, q) {
+  if (!q || qKind(q) !== row.kind) return false;
+  if (row.kind === 'listening') return q.subType === (row.sub || 'short_dialogue');
+  return true;
+}
+/* 题库按行匹配可提供的计分小题数（不看题型列表筛选，只看难度/标记/关键词） */
+function examRowAvailable(row, pool) {
+  if (row.kind === 'writing') return pool.some(q => examRowMatch(row, q)) ? 1 : 0;
+  return pool.reduce((n, q) => n + (examRowMatch(row, q) ? examSubCount(q) : 0), 0);
 }
 
 const exam = {
   active: false, graded: false, paper: [], sections: [], parts: [],
   source: 'bank', ai: { difficulty: 3, topic: '' }, generating: false, bankEmpty: false,
-  timeLimit: 60, maxPlays: 2, remaining: 0, timer: null, startedAt: 0,
-  listenState: {}, stats: null
+  timeLimit: 120, maxPlays: 2, remaining: 0, timer: null, startedAt: 0,
+  listenState: {}, stats: null, blueprint: loadExamBlueprint()
 };
 
 function examSubCount(q) {
@@ -98,7 +80,7 @@ function examSubCount(q) {
   if (q.type === 'verb') return (q.sentences || []).length;
   if (q.type === 'writing') return 0;
   if (q.type === 'listening') {
-    if (q.subType === 'short_dialogue') return (q.items || []).length;
+    if (q.subType === 'short_dialogue' || q.subType === 'sentence') return (q.items || []).length;
     if (q.subType === 'long_dialogue') return (q.questions || []).length;
     if (q.subType === 'table') return (q.blanks || []).length;
     return 0;
@@ -106,27 +88,87 @@ function examSubCount(q) {
   return 1;
 }
 
+/* 题型组小计：作文按 计题数×每题分，其余按 实际小题数×每小题分 */
+function examSectionPoints(row, list) {
+  if (row.kind === 'writing') return designRowPoints(row);
+  const subs = (list || []).reduce((n, q) => n + examSubCount(q), 0);
+  return subs * (row.per || 1);
+}
+
+/* 按行题量挑题：优先取恰好填满剩余小题数的题，其次取不超出的最小题，最后取最大题 */
+function examPickForCount(candidates, count) {
+  const pool = candidates.slice();
+  const list = [];
+  let subs = 0;
+  while (subs < count && pool.length) {
+    const remain = count - subs;
+    let idx = pool.findIndex(q => examSubCount(q) === remain);
+    if (idx < 0) {
+      const fitting = pool.map((q, i) => ({ i, n: examSubCount(q) })).filter(x => x.n >= remain);
+      if (fitting.length) idx = fitting.reduce((a, x) => (x.n < fitting[a].n ? x : a), fitting[0]).i;
+    }
+    if (idx < 0) {
+      idx = pool.reduce((best, q, i) => (examSubCount(q) > examSubCount(pool[best]) ? i : best), 0);
+    }
+    const q = pool.splice(idx, 1)[0];
+    list.push(q);
+    subs += examSubCount(q);
+  }
+  return list;
+}
+
 function buildExamSections() {
-  const pool = filterBankList();
+  const pool = examPool();
   const sections = [];
-  examPlanParts().forEach(part => {
-    part.groups.forEach(g => {
-      const qs = shuffle(pool.filter(q => groupMatch(g, q))).slice(0, g.max || 99);
-      if (qs.length) sections.push({ part: part.label, label: g.label, kind: g.kind, points: g.points || 0, list: qs });
+  enabledExamRows().forEach(row => {
+    const candidates = shuffle(pool.filter(q => examRowMatch(row, q)));
+    let list;
+    if (row.kind === 'writing') {
+      list = candidates.length ? [candidates[0]] : [];
+    } else {
+      list = examPickForCount(candidates, row.count);
+    }
+    if (!list.length) return;
+    const actual = list.reduce((n, q) => n + examSubCount(q), 0);
+    sections.push({
+      part: EXAM_VOL_LABEL[row.vol] || row.vol, vol: row.vol, big: row.big,
+      label: row.title, kind: row.kind, sub: row.sub, per: row.per || 1,
+      want: row.count, row, list, subs: actual,
+      points: examSectionPoints(row, list), short: actual < row.count
     });
   });
   return sections;
 }
 
-/* 按题库筛选条件组卷；返回是否有题可组 */
-function prepareBankPaper() {
-  const parts = examPlanParts();
-  const sections = buildExamSections();
-  exam.parts = parts;
+/* 组卷题池：难度/标记/关键词生效，题型列表筛选不影响整卷蓝图 */
+function examPool() {
+  const diffF = $('bank-filter-diff').value;
+  const flagF = $('bank-filter-flag').value;
+  const kw = $('bank-search').value.trim().toLowerCase();
+  let list = bank.slice();
+  if (diffF !== 'all') list = list.filter(q => clamp(parseInt(q.difficulty) || 1, 1, 5) === parseInt(diffF));
+  if (flagF === 'flagged') list = list.filter(q => q.flagged);
+  else if (flagF === 'unflagged') list = list.filter(q => !q.flagged);
+  if (kw) list = list.filter(q => JSON.stringify(q).toLowerCase().includes(kw));
+  return list;
+}
+
+function assignExamPaper(sections) {
   exam.sections = sections;
+  const volOrder = [];
+  enabledExamRows().forEach(r => { const v = EXAM_VOL_LABEL[r.vol] || r.vol; if (!volOrder.includes(v)) volOrder.push(v); });
+  const present = [];
+  sections.forEach(s => { if (!present.includes(s.part)) present.push(s.part); });
+  exam.parts = volOrder.filter(v => present.includes(v)).map(label => ({ label, points: 0 }));
+  if (!exam.parts.length) exam.parts = sections.map(s => ({ label: s.part, points: 0 }));
   exam.paper = [];
-  sections.forEach(s => s.list.forEach(q => exam.paper.push({ q, id: uid(), section: s, el: null })));
+  sections.forEach(s => s.list.forEach(q => exam.paper.push({ q, id: uid(), section: s, row: s.row, el: null })));
   exam.bankEmpty = !sections.length;
+}
+
+/* 按蓝图从题库组卷；返回是否有题可组 */
+function prepareBankPaper() {
+  assignExamPaper(buildExamSections());
   return !exam.bankEmpty;
 }
 
@@ -162,8 +204,8 @@ function openExam() {
 
 function examSourceOptionsHtml() {
   const bankNote = exam.bankEmpty
-    ? '<span class="muted">当前筛选条件下没有可组卷的题目</span>'
-    : `<span class="muted">按当前筛选条件抽取 · ${exam.paper.length} 题可选</span>`;
+    ? '<span class="muted">按当前条件没有可组卷的题目</span>'
+    : `<span class="muted">已按蓝图组好 ${exam.paper.length} 题 · 难度/标记/关键词筛选生效</span>`;
   return `
     <div class="exam-src">
       <label class="exam-src-opt${exam.source === 'bank' ? ' on' : ''}">
@@ -213,54 +255,122 @@ function examVocabHtml() {
     </div>`;
 }
 
+/* 蓝图行 → AI 出卷任务：一条蓝图行派生 1..N 个生成任务 */
+function examRowJobs(row) {
+  const k = row.kind;
+  const n = Math.max(1, row.count || 1);
+  if (k === 'listening') {
+    const sub = row.sub || 'short_dialogue';
+    let extra = `- 本题 items 数量必须为 ${n}。\n`;
+    if (sub === 'long_dialogue') extra = `- 本题 questions 数量为 ${n}。\n`;
+    if (sub === 'table') extra = `- 本题 blanks 数量必须为 ${n}。\n`;
+    return [{ count: 1, sub, extra }];
+  }
+  if (k === 'reading') {
+    const passages = Math.max(1, Math.ceil(n / 5));
+    return [{ count: passages, extra: `- 请生成 ${passages} 篇完整的阅读理解：JSON 数组长度必须为 ${passages}，每篇含 5 个小题（共 ${n} 小题）。\n` }];
+  }
+  if (k === 'choice') {
+    const jobs = [];
+    for (let i = 0; i < n; i += 15) jobs.push({ count: Math.min(15, n - i) });
+    return jobs;
+  }
+  if (k === 'verb') return [{ count: 1, extra: `- 本篇句子数量必须为 ${n} 个。\n` }];
+  if (k === 'cloze' || k === 'fillgap' || k === 'seven') return [{ count: 1, extra: `- 本篇短文空格数量必须为 ${n} 个。\n` }];
+  if (k === 'readanswer') return [{ count: 1, extra: `- questions 数组长度必须为 ${n}。\n` }];
+  return [{ count: 1 }];
+}
+
+function aiRowTarget(row, jobs) {
+  const unit = { reading:'篇', seven:'篇', cloze:'篇', fillgap:'篇', readanswer:'篇', writing:'篇', verb:'篇' }[row.kind] || '道';
+  const c = (jobs || []).reduce((a, j) => a + (parseInt(j.count, 10) || 0), 0);
+  const subs = row.kind === 'listening' ? `（${listeningSubLabel(row.sub)}）` : '';
+  return `AI 生成 ${c} ${unit}${subs}`;
+}
+
+/* 可编辑组卷蓝图：勾选启用 / 改题量 / 改每题分值，实时合计 */
+function examBlueprintTableHtml(isAI) {
+  const pool = isAI ? [] : examPool();
+  let curVol = null;
+  const rowsHtml = exam.blueprint.map(row => {
+    let volRow = '';
+    if (row.vol !== curVol) {
+      curVol = row.vol;
+      const volPts = enabledExamRows().filter(r => r.vol === row.vol).reduce((s, r) => s + designRowPoints(r), 0);
+      volRow = `<tr class="bp-vol"><td colspan="7">${esc(EXAM_VOL_LABEL[row.vol] || row.vol)}<span>${fmtPts(volPts)} 分</span></td></tr>`;
+    }
+    const need = row.kind === 'writing' ? 1 : row.count;
+    const avail = isAI ? 0 : examRowAvailable(row, pool);
+    const shortOf = !isAI && row.enabled && avail < need;
+    let availHtml;
+    if (isAI) {
+      availHtml = row.enabled ? esc(aiRowTarget(row, examRowJobs(row))) : '<span class="muted">未启用</span>';
+    } else {
+      availHtml = row.enabled
+        ? (avail >= need ? `${need} / ${need}` : `<span class="bp-short">缺 ${need - avail} · 可组 ${avail}</span>`)
+        : `<span class="muted">${avail} / ${need}</span>`;
+    }
+    return volRow + `<tr class="bp-row${row.enabled ? '' : ' off'}${shortOf ? ' short' : ''}" data-brow="${esc(row.id)}">
+      <td class="bp-check"><input type="checkbox" data-bf="enabled"${row.enabled ? ' checked' : ''}></td>
+      <td class="bp-big">${esc(row.big)}</td>
+      <td class="bp-title">${esc(row.title)}${row.optional ? '<span class="bp-tag">附加</span>' : ''}</td>
+      <td class="bp-num"><input type="number" data-bf="count" min="1" max="99" value="${row.count}"${row.enabled ? '' : ' disabled'}></td>
+      <td class="bp-num"><input type="number" data-bf="per" min="0.5" step="0.5" max="99" value="${row.per}"${row.enabled ? '' : ' disabled'}></td>
+      <td class="bp-pts">${row.enabled ? fmtPts(designRowPoints(row)) : '—'}</td>
+      <td class="bp-avail">${availHtml}</td>
+    </tr>`;
+  }).join('');
+  const vols = designExamTotal();
+  const designTotal = vols['Ⅰ'] + vols['Ⅱ'] + vols['附'];
+  const footHtml = `
+    <tr class="bp-foot"><td colspan="5">卷Ⅰ 选择题</td><td>${fmtPts(vols['Ⅰ'])}</td><td></td></tr>
+    <tr class="bp-foot"><td colspan="5">卷Ⅱ 非选择题</td><td>${fmtPts(vols['Ⅱ'])}</td><td></td></tr>
+    ${vols['附'] ? `<tr class="bp-foot"><td colspan="5">附加题型</td><td>${fmtPts(vols['附'])}</td><td></td></tr>` : ''}
+    <tr class="bp-total"><td colspan="5">合计满分</td><td>${fmtPts(designTotal)}</td><td></td></tr>`;
+  return `
+    <div class="bp-head row between">
+      <b>组卷蓝图（可编辑）</b>
+      <button class="btn sm" type="button" id="exam-bp-reset">恢复默认蓝图</button>
+    </div>
+    <div class="table-wrap"><table class="exam-bp-table">
+      <thead><tr><th class="bp-check">启用</th><th class="bp-big">大题</th><th class="bp-title">题型</th>
+        <th class="bp-num">小题数</th><th class="bp-num">每题分</th><th class="bp-pts">小计</th><th class="bp-avail">${isAI ? 'AI 生成' : '题库可组'}</th></tr></thead>
+      <tbody>${rowsHtml}${footHtml}</tbody>
+    </table></div>
+    <p class="muted small" style="margin:8px 0 0">勾选决定本卷是否考查，题量与分值可改，合计实时更新；设置会记住，可随时「恢复默认蓝图」。${isAI ? '' : '题库列表的题型筛选不影响组卷，组卷范围只由上方蓝图决定。'}</p>`;
+}
+
 function renderExamSetup() {
   const isAI = exam.source === 'ai';
+  const vols = designExamTotal();
+  const designTotal = vols['Ⅰ'] + vols['Ⅱ'] + vols['附'];
+  const actualTotal = (exam.sections || []).reduce((n, s) => n + (s.points || 0), 0);
   const totalQ = exam.paper.length;
   const totalSub = exam.paper.reduce((n, r) => n + examSubCount(r.q), 0);
-  const secPointsOf = s => (s.points > 0 ? s.points : s.list.reduce((n, q) => n + examSubCount(q), 0));
-  let secHtml = '';
-  let planTotal = 0;
+  const shortRows = isAI ? [] : enabledExamRows().filter(row => {
+    const need = row.kind === 'writing' ? 1 : row.count;
+    return examRowAvailable(row, examPool()) < need;
+  });
+  let headLine;
   if (isAI) {
-    secHtml = examAIPlan().map(p => {
-      planTotal += p.points;
-      const items = p.groups.map(g =>
-        `<li><b>${esc(g.label)}</b><span class="muted">${esc(aiPlanTarget(g))}</span></li>`).join('');
-      return `<li class="exam-part-row"><b>${esc(p.label)}</b><span>${p.points} 分</span></li>${items}`;
-    }).join('');
+    headLine = `AI 将按蓝图现场命题 · 设计满分 <b>${fmtPts(designTotal)}</b> 分（卷Ⅰ ${fmtPts(vols['Ⅰ'])} + 卷Ⅱ ${fmtPts(vols['Ⅱ'])}${vols['附'] ? ` + 附加 ${fmtPts(vols['附'])}` : ''}）`;
+  } else if (exam.bankEmpty) {
+    headLine = '<b>没有可组卷的题目</b>：请调整难度/关键词筛选、启用更多题型，或改用 AI 全新出卷';
   } else {
-    secHtml = (exam.parts || []).map(p => {
-      const items = p.groups.map(g => {
-        const s = (exam.sections || []).find(x => x.part === p.label && x.label === g.label);
-        if (!s) {
-          return `<li class="miss"><b>${esc(g.label)}</b><span class="muted">题库暂无 · ${g.points} 分不计</span></li>`;
-        }
-        const subs = s.list.reduce((n, q) => n + examSubCount(q), 0);
-        const pts = secPointsOf(s);
-        planTotal += pts;
-        return `<li><b>${esc(s.label)}</b><span class="muted">${s.list.length} 题 · ${subs} 小题 · ${pts} 分</span></li>`;
-      }).join('');
-      const partPts = p.groups.reduce((n, g) => {
-        const s = (exam.sections || []).find(x => x.part === p.label && x.label === g.label);
-        return n + (s ? secPointsOf(s) : 0);
-      }, 0);
-      return `<li class="exam-part-row"><b>${esc(p.label)}</b><span>${partPts} / ${p.points} 分</span></li>${items}`;
-    }).join('');
+    headLine = `本卷满分 <b>${fmtPts(designTotal)}</b> 分 · 卷Ⅰ ${fmtPts(vols['Ⅰ'])} + 卷Ⅱ ${fmtPts(vols['Ⅱ'])}${vols['附'] ? ` + 附加 ${fmtPts(vols['附'])}` : ''}` +
+      (shortRows.length ? ` · <span style="color:var(--accent)">${shortRows.length} 个题型题库不足，按可组题量计 ${fmtPts(actualTotal)} 分</span>` : '') +
+      ` · 共 <b>${totalQ}</b> 题、<b>${totalSub}</b> 个计分小题${totalSub ? '' : '（作文交卷后由 AI 批改给分）'}`;
   }
-  const headLine = isAI
-    ? `AI 将现场命题，组成一套<b>全新</b>试卷 · 满分 <b>${planTotal}</b> 分`
-    : exam.bankEmpty
-      ? '<b>没有可组卷的题目</b>：请调整题库筛选条件，或改用 AI 全新出卷'
-      : `本卷满分 <b>${planTotal}</b> 分 · 共 <b>${totalQ}</b> 题、<b>${totalSub}</b> 个计分小题${totalSub ? '' : '（作文交卷后由 AI 批改给分）'}`;
   $('exam-sub').textContent = isAI
-    ? 'AI 全新出卷 · 不写入题库'
-    : `按题库筛选条件自动组卷 · 共 ${totalQ} 题`;
+    ? 'AI 全新出卷 · 按下方蓝图命题 · 不写入题库'
+    : `题库组卷 · 满分 ${fmtPts(designTotal)} 分 · 已组 ${totalQ} 题`;
   const canStart = isAI || !exam.bankEmpty;
   $('exam-setup').innerHTML = `
     <div class="exam-setup-grid">
       <div>
         ${examSourceOptionsHtml()}
         <div class="exam-total">${headLine}</div>
-        <ul class="exam-sec-list">${secHtml}</ul>
+        ${examBlueprintTableHtml(isAI)}
         ${isAI ? examAIOptionsHtml() + examVocabHtml() : ''}
       </div>
       <div>
@@ -269,9 +379,9 @@ function renderExamSetup() {
           <select id="exam-mins">
             <option value="30">30 分钟</option>
             <option value="45">45 分钟</option>
-            <option value="60" selected>60 分钟</option>
+            <option value="60">60 分钟</option>
             <option value="90">90 分钟</option>
-            <option value="120">120 分钟</option>
+            <option value="120" selected>120 分钟</option>
           </select>
         </div>
         <div class="exam-opt">
@@ -286,7 +396,7 @@ function renderExamSetup() {
           <button class="btn primary" id="exam-begin"${canStart ? '' : ' disabled'}>开始考试</button>
           <button class="btn" id="exam-cancel">取消</button>
         </div>
-        <p class="muted small" style="margin-top:14px">考试期间不即时判分，交卷后统一给出答案与解析；听力原文与作文 AI 批改在交卷后可用。</p>
+        <p class="muted small" style="margin-top:14px">考试期间不即时判分，交卷后统一给出答案与解析；每小题按蓝图分值计分，听力原文与作文 AI 批改在交卷后可用。</p>
       </div>
     </div>
     <div id="exam-gen-status" class="ai-status" style="display:none"></div>`;
@@ -303,10 +413,11 @@ function renderExamQuestion(q) {
   return '<div class="ai-error">未知题型</div>';
 }
 
-/* 题型组分值：题库缺题导致小题数不足时，仍按题型满分计（每小题等分） */
+/* 题型组分值：组卷时已按 小题数×每题分（作文按 题数×每题分）算好 */
 function sectionPoints(s) {
   if (s.points > 0) return s.points;
-  return s.list.reduce((n, q) => n + examSubCount(q), 0);
+  if (s.kind === 'writing') return designRowPoints(s.row || { count: 1, per: 20 });
+  return s.list.reduce((n, q) => n + examSubCount(q), 0) * (s.per || 1);
 }
 function examPartPoints(partLabel) {
   return (exam.sections || []).reduce((n, s) => n + (s.part === partLabel ? sectionPoints(s) : 0), 0);
@@ -317,21 +428,26 @@ function renderExamPaper() {
   let cur = null;
   let curPart = null;
   let secIdx = 0;
+  let qNum = 0;
   exam.paper.forEach(rec => {
     if (rec.section !== cur) {
       if (cur) html += '</section>';
       if (rec.section.part !== curPart) {
         curPart = rec.section.part;
-        html += `<div class="exam-part-head"><span class="ep-title">${esc(curPart)}</span><span class="ep-points">共 ${examPartPoints(curPart)} 分</span></div>`;
+        html += `<div class="exam-part-head"><span class="ep-title">${esc(curPart)}</span><span class="ep-points">共 ${fmtPts(examPartPoints(curPart))} 分</span></div>`;
       }
       cur = rec.section;
       secIdx++;
       const subs = cur.list.reduce((n, q) => n + examSubCount(q), 0);
+      const range = subs > 0 ? (subs === 1 ? `题号 ${qNum + 1}` : `题号 ${qNum + 1}–${qNum + subs}`) + ' · ' : '';
+      qNum += subs;
+      const pts = fmtPts(sectionPoints(cur));
+      const num = cur.big === '加' ? '附加' : String(cur.big || secIdx) + '、';
       html += `<section class="exam-section">
         <div class="exam-sec-head">
-          <span class="eh-num">${secIdx < 10 ? '0' + secIdx : secIdx}</span>
+          <span class="eh-num">${esc(num)}</span>
           <span class="eh-title">${esc(cur.label)}</span>
-          <span class="eh-note">${cur.list.length} 题 · ${subs} 小题 · ${sectionPoints(cur)} 分</span>
+          <span class="eh-note">${range}${cur.list.length} 题${subs > 0 ? ` · ${subs} 小题` : ''} · ${pts} 分</span>
         </div>`;
     }
     html += `<div class="exam-q" data-eid="${rec.id}">${renderExamQuestion(rec.q)}</div>`;
@@ -360,14 +476,13 @@ function bindExamPaper() {
   });
 }
 
-/* AI 全新出卷：按计划逐板块调用 AI，返回题目分组 */
+/* AI 全新出卷：按蓝图行逐个调用 AI，行 → 任务 → 题目分组 */
 async function generateExamSections() {
   if (!settings || !settings.endpoint || !settings.key || !settings.model) {
     toast('请先在「设置」中配置 API', 'err');
     $('tabs').querySelector('[data-tab="settings"]').click();
     return [];
   }
-  const plan = examAIPlan();
   const status = $('exam-gen-status');
   const btn = $('exam-begin');
   const setNote = (text, cls) => {
@@ -380,36 +495,42 @@ async function generateExamSections() {
   if (btn) { btn.disabled = true; btn.textContent = 'AI 出卷中…'; }
   const sections = [];
   const errors = [];
-  const flat = [];
-  plan.forEach(p => p.groups.forEach(g => flat.push(Object.assign({ part: p.label }, g))));
+  const rows = enabledExamRows();
   try {
-    for (let i = 0; i < flat.length; i++) {
-      const g = flat[i];
-      setNote(`正在生成：${g.label}（${i + 1}/${flat.length}）…`);
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      setNote(`正在生成：${row.title}（${i + 1}/${rows.length}）…`);
       const list = [];
-      for (const job of (g.jobs || [])) {
+      for (const job of examRowJobs(row)) {
         try {
-          const got = await generateQuestions(g.kind, {
+          const got = await generateQuestions(row.kind, {
             topic: exam.ai.topic, difficulty: exam.ai.difficulty,
             count: job.count, level: job.level || 'A',
-            listeningSub: job.sub, extra: job.extra || '',
+            listeningSub: job.sub || row.sub, extra: job.extra || '',
             vocabPrefix: 'exam'
           });
           list.push(...got);
         } catch (err) {
-          errors.push(`${g.label}：${err.message}`);
+          errors.push(`${row.title}：${err.message}`);
         }
       }
-      if (list.length) sections.push({ part: g.part, label: g.label, kind: g.kind, points: g.points || 0, list });
+      if (!list.length) continue;
+      const actual = list.reduce((n, q) => n + examSubCount(q), 0);
+      sections.push({
+        part: EXAM_VOL_LABEL[row.vol] || row.vol, vol: row.vol, big: row.big,
+        label: row.title, kind: row.kind, sub: row.sub, per: row.per || 1,
+        want: row.count, row, list, subs: actual,
+        points: examSectionPoints(row, list), short: actual < row.count
+      });
     }
   } finally {
     exam.generating = false;
     if (btn) { btn.disabled = false; btn.textContent = '开始考试'; }
   }
   if (errors.length) {
-    setNote(`部分板块生成失败 —— ${errors.join('；')}`, 'err');
+    setNote(`部分题型生成失败 —— ${errors.join('；')}`, 'err');
     if (!sections.length) { toast('AI 出卷失败，请检查 API 配置后重试', 'err'); return []; }
-    toast(`有 ${errors.length} 个板块生成失败，已用其余板块组卷`, 'err');
+    toast(`有 ${errors.length} 个题型生成失败，已用其余题型组卷`, 'err');
   } else {
     setNote(`生成完成：${sections.reduce((n, s) => n + s.list.length, 0)} 道题`, 'ok');
   }
@@ -418,15 +539,12 @@ async function generateExamSections() {
 
 async function beginExam() {
   if (exam.generating) return;
-  const mins = parseInt($('exam-mins').value, 10) || 60;
+  const mins = parseInt($('exam-mins').value, 10) || 120;
   const playsRaw = parseInt($('exam-plays').value, 10);
   if (exam.source === 'ai') {
     const sections = await generateExamSections();
     if (!sections.length) return;
-    exam.parts = examAIPlan();
-    exam.sections = sections;
-    exam.paper = [];
-    sections.forEach(s => s.list.forEach(q => exam.paper.push({ q, id: uid(), section: s, el: null })));
+    assignExamPaper(sections);
   } else {
     if (exam.bankEmpty || !exam.paper.length) { toast('没有可组卷的题目，请调整筛选条件或改用 AI 出卷', 'err'); return; }
   }
@@ -510,7 +628,7 @@ function countExamAnswered() {
         else { const inp = el.querySelector(`input.verb-input[data-vidx="${i}"]`); if (inp && inp.value.trim()) done++; }
       });
     } else if (q.type === 'listening') {
-      if (q.subType === 'short_dialogue') {
+      if (q.subType === 'short_dialogue' || q.subType === 'sentence') {
         (q.items || []).forEach((it, i) => { total++; if (has(`.q-options[data-lidx="${i}"] .q-option.chosen`)) done++; });
       } else if (q.subType === 'long_dialogue') {
         (q.questions || []).forEach((sq, i) => { total++; if (has(`.q-options[data-sidx="${i}"] .q-option.chosen`)) done++; });
@@ -539,14 +657,18 @@ function finishExam(auto) {
   gradeExam();
 }
 
-/* 书面表达 20 分：从 AI 批改结果里解析【总分】X / 20 */
+/* 书面表达：从 AI 批改结果里解析【总分】X / N，N 取蓝图中作文的分值 */
+function examEssayMax() {
+  const sec = (exam.sections || []).find(s => s.kind === 'writing');
+  return (sec && sec.points) || 20;
+}
 function readEssayScore() {
   const rec = exam.paper.find(r => r.q && r.q.type === 'writing');
   if (!rec || !rec.el) return null;
   const box = rec.el.querySelector('.writing-appreciation');
   const txt = box ? box.textContent || '' : '';
-  const m = txt.match(/(?:总分|得分|score)\s*[：:]?\s*(\d+(?:\.\d+)?)\s*[\/／]\s*20/i);
-  if (m) return clamp(parseFloat(m[1]), 0, 20);
+  const m = txt.match(/【?\s*(?:总分|得分|score)\s*】?\s*[：:]?\s*(\d+(?:\.\d+)?)\s*[\/／]\s*\d+/i);
+  if (m) return clamp(parseFloat(m[1]), 0, examEssayMax());
   return null;
 }
 
@@ -599,8 +721,8 @@ function gradeExam() {
     const row = secMap.get(s);
     if (!row) return null;
     row.points = sectionPoints(s);
-    // 题型满分按小题等分；作文无小题，交卷后由 AI 批改给分
-    row.perSub = (row.total && s.points > 0) ? s.points / row.total : 1;
+    // 每小题分值固定为蓝图行的 per；作文无小题，交卷后由 AI 批改给分
+    row.perSub = s.per || 1;
     row.earned = row.correct * row.perSub;
     row.writing = s.kind === 'writing';
     if (row.writing) { row.earned = 0; row.pending = true; }
@@ -765,7 +887,7 @@ function gradeExamQuestion(rec) {
     });
 
   } else if (q.type === 'listening') {
-    if (q.subType === 'short_dialogue') {
+    if (q.subType === 'short_dialogue' || q.subType === 'sentence') {
       (q.items || []).forEach((it, i) => {
         total++;
         const opts = optsOf(`.q-options[data-lidx="${i}"] .q-option`);
@@ -862,12 +984,13 @@ function renderExamReport() {
   const writingRec = exam.paper.find(r => r.q.type === 'writing');
   let essayHtml = '';
   if (writingRec) {
+    const essayMax = fmtPts(examEssayMax());
     const ta = writingRec.el && writingRec.el.querySelector('.writing-input');
     const txt = ta ? ta.value.trim() : '';
     const words = txt ? txt.split(/\s+/).filter(Boolean).length : 0;
     essayHtml = `<div class="row" style="margin-top:10px">
       <button class="btn sm" id="exam-essay-jump">查看 / AI 批改作文</button>
-      <span class="muted small">${txt ? `作文已写 <b>${words}</b> 词 · 书面表达 20 分${st.essayScore == null ? '，交卷后提交 AI 批改给分' : ` · AI 批改得分 <b>${fmtPts(st.essayScore)}</b> 分`}` : '作文未填写 · 书面表达 20 分计 0'}</span>
+      <span class="muted small">${txt ? `作文已写 <b>${words}</b> 词 · 书面表达 ${essayMax} 分${st.essayScore == null ? '，交卷后提交 AI 批改给分' : ` · AI 批改得分 <b>${fmtPts(st.essayScore)}</b> 分`}` : `作文未填写 · 书面表达 ${essayMax} 分计 0`}</span>
     </div>`;
   }
   const saveHtml = exam.source === 'ai'
@@ -948,9 +1071,17 @@ $('bank-exam').addEventListener('click', e => {
     return;
   }
   if (t.closest('#exam-save-bank')) return saveExamPaperToBank();
+  if (t.closest('#exam-bp-reset')) {
+    exam.blueprint = cloneExamRows();
+    saveExamBlueprint();
+    if (exam.source === 'bank') prepareBankPaper();
+    renderExamSetup();
+    toast('已恢复默认蓝图（东营卷 120 分）', 'ok');
+    return;
+  }
 });
 
-/* 试卷来源切换 / AI 命题参数 */
+/* 试卷来源切换 / AI 命题参数 / 蓝图行编辑 */
 $('bank-exam').addEventListener('change', e => {
   const t = e.target;
   if (exam.generating) return;
@@ -960,8 +1091,20 @@ $('bank-exam').addEventListener('change', e => {
     renderExamSetup();
     return;
   }
-  if (t.id === 'exam-ai-diff') exam.ai.difficulty = clamp(parseInt(t.value) || 3, 1, 5);
-  if (t.id === 'exam-ai-topic') exam.ai.topic = t.value.trim();
+  if (t.id === 'exam-ai-diff') { exam.ai.difficulty = clamp(parseInt(t.value) || 3, 1, 5); return; }
+  if (t.id === 'exam-ai-topic') { exam.ai.topic = t.value.trim(); return; }
+  const bf = t.dataset ? t.dataset.bf : null;
+  if (!bf) return;
+  const tr = t.closest('tr[data-brow]');
+  if (!tr) return;
+  const row = exam.blueprint.find(r => r.id === tr.dataset.brow);
+  if (!row) return;
+  if (bf === 'enabled') row.enabled = !!t.checked;
+  if (bf === 'count') row.count = clamp(parseInt(t.value, 10) || row.count, 1, 99);
+  if (bf === 'per') row.per = clamp(parseFloat(t.value) || row.per, 0.5, 99);
+  saveExamBlueprint();
+  if (exam.source === 'bank') prepareBankPaper();
+  renderExamSetup();
 });
 
 function saveExamPaperToBank() {
@@ -1009,5 +1152,5 @@ $('exam-paper').addEventListener('click', e => {
   if (!sub || sub.disabled) return;
   const wrap = sub.closest('.exam-q');
   const rec = exam.paper.find(r => r.el === wrap);
-  if (rec) handleWritingSubmit(rec.q, { root: wrap });
+  if (rec) handleWritingSubmit(rec.q, { root: wrap, essayMax: examEssayMax() });
 });

@@ -191,7 +191,7 @@ function renderVerb(q, ctx) {
 
 /* ---- 听力题渲染 ---- */
 function renderListening(q) {
-  if (q.subType === 'short_dialogue') {
+  if (q.subType === 'short_dialogue' || q.subType === 'sentence') {
     return renderListeningShort(q);
   }
   if (q.subType === 'long_dialogue') {
@@ -204,13 +204,14 @@ function renderListening(q) {
 }
 
 function renderListeningShort(q) {
+  const isSentence = q.subType === 'sentence';
   const items = q.items.map((it, i) => `
     <div class="listening-item" data-lidx="${i}">
       <div class="listening-item-head">
         <span class="num">${i+1}</span>
         <button class="btn sm" data-lplay="${i}">▶ 播放第 ${i+1} 段</button>
       </div>
-      <p class="sub-q-text">${esc(it.question)}</p>
+      ${isSentence ? '' : `<p class="sub-q-text">${esc(it.question)}</p>`}
       <div class="q-options" data-qtype="listen" data-lidx="${i}">
         ${it.options.map((o, j) => `<button class="q-option" data-oi="${j}" data-lidx="${i}" data-val="${esc(o)}">${String.fromCharCode(65+j)}. ${esc(o)}</button>`).join('')}
       </div>
@@ -221,12 +222,12 @@ function renderListeningShort(q) {
     <div class="q-card">
       <div class="q-meta">
         <span class="tag accent">听力题</span>
-        <span class="tag blue">短对话问答</span>
+        <span class="tag blue">${isSentence ? '听句子选答语' : '短对话问答'}</span>
         <span class="tag">难度 ${starLabel(q.difficulty)}</span>
       </div>
       <div class="listening-prompt">
         <b>📢 题型说明：</b>${esc(q.instructions)}<br>
-        <b>⏱ 建议读题时间：</b>${q.prepTime} 秒 · <b>共 ${q.items.length} 组</b>
+        <b>⏱ 建议读题时间：</b>${q.prepTime} 秒 · <b>共 ${q.items.length} 句</b>
       </div>
       ${items}
       <div class="q-result-area"></div>
@@ -376,7 +377,7 @@ function setupListeningUI(q, opts) {
     applyLimit();
   };
 
-  if (q.subType === 'short_dialogue') {
+  if (q.subType === 'short_dialogue' || q.subType === 'sentence') {
     root.querySelectorAll('button[data-lplay]').forEach(btn => {
       btn.addEventListener('click', async () => {
         const idx = parseInt(btn.dataset.lplay);
@@ -626,7 +627,7 @@ $('bank-question-area').addEventListener('click', e => {
   if (q.type === 'listening') {
     const opt = e.target.closest('.q-option');
     if (!opt) return;
-    if (q.subType === 'short_dialogue') {
+    if (q.subType === 'short_dialogue' || q.subType === 'sentence') {
       const lidx = parseInt(opt.dataset.lidx);
       if (practice.state.subAnswered.has('l' + lidx)) return;
       practice.state.subAnswered.add('l' + lidx);
@@ -766,6 +767,7 @@ function checkReadingOpen(q) {
 async function handleWritingSubmit(q, opts) {
   opts = opts || {};
   const root = opts.root || $('bank-question-area');
+  const essayMax = clamp(parseInt(opts.essayMax, 10) || 20, 1, 100);
   const ta = root.querySelector('.writing-input');
   const essay = ta ? ta.value.trim() : '';
   if (!essay) { toast('请先写作文', 'err'); return; }
@@ -775,7 +777,7 @@ async function handleWritingSubmit(q, opts) {
   out.innerHTML = '<div class="ai-loading">正在批改作文<span class="dot"></span><span class="dot"></span><span class="dot"></span></div>';
   try {
     const sys = settings.prompts.appreciation;
-    const user = `作文题目与要求：\n${q.prompt}\n\n学生的作文：\n${essay}`;
+    const user = `作文题目与要求：\n${q.prompt}\n\n学生的作文：\n${essay}\n\n本次作文满分 ${essayMax} 分，请严格按【总分】X / ${essayMax} 的格式给分。`;
     const text = await callChat([{ role: 'system', content: sys }, { role: 'user', content: user }], { temperature: 0.5 });
     out.innerHTML = `<div class="explain-box ai"><div class="head">🤖 AI 批改</div>${esc(text).replace(/\n/g,'<br>')}</div>`;
     status.textContent = '';
@@ -884,7 +886,7 @@ $('bank-reveal').addEventListener('click', () => {
     }
     practice.answered = true;
   } else if (q.type === 'listening') {
-    if (q.subType === 'short_dialogue') {
+    if (q.subType === 'short_dialogue' || q.subType === 'sentence') {
       q.items.forEach((it, i) => {
         const el = area.querySelector(`.listening-item[data-lidx="${i}"]`);
         if (!el) return;
@@ -978,7 +980,7 @@ $('bank-ai-explain').addEventListener('click', async () => {
       return `${i+1}. 学生选择：${wrong ? wrong.dataset.val : '(正确/未答)'}`;
     }).join('\n');
   } else if (q.type === 'listening') {
-    if (q.subType === 'short_dialogue') {
+    if (q.subType === 'short_dialogue' || q.subType === 'sentence') {
       userInfo = q.items.map((it, i) => {
         const el = area.querySelector(`.listening-item[data-lidx="${i}"]`);
         const wrong = el?.querySelector('.q-option.wrong');
@@ -1040,8 +1042,9 @@ function describeQuestionForAI(q) {
     return `题型：动词填空\n${q.sentences.map((s,i)=>`${i+1}. ${s.text}\n   答案：${s.answer}`).join('\n')}`;
   }
   if (q.type === 'listening') {
-    if (q.subType === 'short_dialogue') {
-      return `题型：听力-短对话问答\n${q.items.map((it,i)=>`第${i+1}组\n录音：${it.script}\n问题：${it.question}\n选项：${it.options.join('；')}\n答案：${it.answer}`).join('\n')}`;
+    if (q.subType === 'short_dialogue' || q.subType === 'sentence') {
+      const t = q.subType === 'sentence' ? '听力-听句子选答语' : '听力-短对话问答';
+      return `题型：${t}\n${q.items.map((it,i)=>`第${i+1}句\n录音：${it.script}\n${it.question ? '问题：' + it.question + '\n' : ''}选项：${it.options.join('；')}\n答案：${it.answer}`).join('\n')}`;
     }
     if (q.subType === 'long_dialogue') {
       return `题型：听力-长对话理解\n录音：${q.script}\n${q.questions.map((sq,i)=>`Q${i+1}: ${sq.question}\n  选项：${sq.options.join('；')}\n  答案：${sq.answer}`).join('\n')}`;

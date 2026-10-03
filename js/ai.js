@@ -94,8 +94,16 @@ function buildPromptForType(type, topic, difficulty, count, level, listeningSub,
   if (type === 'fillgap') extra = `- 每篇含 10 个空，只给首字母提示，不给选项\n`;
   if (type === 'readanswer') extra = `- 每篇含 3-4 个问题\n`;
   if (type === 'listening') {
-    const subMap = { short_dialogue:'short_dialogue（短对话问答，5组）', long_dialogue:'long_dialogue（长对话理解，3-5小题）', table:'table（听力填表）' };
+    const subMap = {
+      sentence:'sentence（听句子选答语，5个独立句子各配1道ABC应答选择）',
+      short_dialogue:'short_dialogue（短对话问答，5组）',
+      long_dialogue:'long_dialogue（长对话理解，3-5小题）',
+      table:'table（听力填表）'
+    };
     extra = `- 听力子题型：${subMap[listeningSub] || 'short_dialogue'}\n`;
+    if (listeningSub === 'sentence') {
+      extra += `- 子题型格式：返回 1 道题，subType 必须为 "sentence"，含 items 数组；每项含 script（听到的句子原文）、question（写「听句子，选出正确的应答语。」）、options（3 个应答语）、answer（正确应答）、explanation（中文）。题目结构与 short_dialogue 相同，只是 script 为独立句子而非对话。\n`;
+    }
   }
   const vocab = buildVocabBlock(vocabPrefix);
   const rules = buildFieldRules(type);
@@ -220,11 +228,11 @@ function renderAIQuestions(list) {
       </div>`).join('');
     } else if (q.type === 'listening') {
       inner = `<div class="listening-prompt"><b>📢 说明：</b>${esc(q.instructions || '')}${q.prepTime?` · 建议读题时间 ${q.prepTime}s`:''}</div>`;
-      if (q.subType === 'short_dialogue') {
+      if (q.subType === 'short_dialogue' || q.subType === 'sentence') {
         inner += q.items.map((it, i) => `
           <div class="listening-item">
-            <div class="listening-item-head"><span class="num">${i+1}</span><span>短对话</span></div>
-            <p class="sub-q-text">${esc(it.question)}</p>
+            <div class="listening-item-head"><span class="num">${i+1}</span><span>${q.subType === 'sentence' ? '句子' : '短对话'}</span></div>
+            ${q.subType === 'sentence' ? '' : `<p class="sub-q-text">${esc(it.question)}</p>`}
             <div class="q-options">${it.options.map((o,j)=>`<button class="q-option" disabled>${String.fromCharCode(65+j)}. ${esc(o)}</button>`).join('')}</div>
             <div class="explain-box" style="margin-top:10px">答案：${maskAnswer(it.answer)}${it.explanation?' · '+maskAnswer(it.explanation):''}</div>
           </div>`).join('');

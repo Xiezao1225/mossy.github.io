@@ -197,7 +197,7 @@ level 取 A/B/C/D，难度依次递增，词汇与句式相应变难。`,
   listening: `你是一位英语教师。根据用户要求生成中考听力题。
 只返回 JSON 数组，不含 Markdown 代码块。
 
-根据 listeningSubType 生成以下三类之一：
+根据 listeningSubType 生成以下四类之一：
 
 【1】short_dialogue（短对话问答）——5组对话，每组一段短对话配1道ABC选择题
 格式：
@@ -258,9 +258,31 @@ level 取 A/B/C/D，难度依次递增，词汇与句式相应变难。`,
   }
 ]
 
+【4】sentence（听句子选答语）——5 个独立句子，每句配 1 道 ABC 应答选择题（听到句子后选出正确应答）
+格式：
+[
+  {
+    "type": "listening",
+    "subType": "sentence",
+    "instructions": "听下面 5 个句子，从ABC三个选项中选出正确的应答语。",
+    "prepTime": 30,
+    "items": [
+      {
+        "script": "Thank you very much.",
+        "question": "听句子，选出正确的应答语。",
+        "options": ["A. You're welcome.", "B. Not at all.", "C. I'm sorry."],
+        "answer": "A",
+        "explanation": "对方致谢，应答 You're welcome。"
+      }
+    ],
+    "difficulty": 3
+  }
+]
+
 注意事项：
 - script 中用 W:/M: 区分说话人（W 为女声，M 为男声），用 \\n 换行。
 - short_dialogue 的 items 数量必须为 5。
+- sentence 的 items 数量必须为 5，script 为听到的句子原文，options 为 3 个应答语。
 - long_dialogue 的 questions 数量 3-5。
 - table 模式：rows 是二维数组；blanks 里的 row/col 为 0 起始索引，用 ___ 表示要填的空。
 - answer 可以是选项字母（如 "A"）或选项文本。`,

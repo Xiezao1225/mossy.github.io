@@ -34,7 +34,7 @@ function qKind(q) {
 }
 function kindLabel(q) { return KIND_LABEL[qKind(q)] || (q && q.type) || ''; }
 function listeningSubLabel(s) {
-  return { short_dialogue:'短对话问答', long_dialogue:'长对话理解', table:'听力填表' }[s] || '听力';
+  return { sentence:'听句子选答语', short_dialogue:'短对话问答', long_dialogue:'长对话理解', table:'听力填表' }[s] || '听力';
 }
 function starLabel(n) {
   const v = clamp(parseInt(n) || 1, 1, 5);
@@ -77,6 +77,7 @@ function briefOf(q) {
   if (q.type === 'cloze')  return (q.passage || '').slice(0, 70) + '…';
   if (q.type === 'verb')   return (q.sentences?.[0]?.text || '').slice(0, 70) + '…';
   if (q.type === 'listening') {
+    if (q.subType === 'sentence') return `听句子 · ${(q.items||[]).length} 句`;
     if (q.subType === 'short_dialogue') return `短对话 · ${(q.items||[]).length} 组`;
     if (q.subType === 'long_dialogue') return `长对话 · ${(q.questions||[]).length} 小题`;
     if (q.subType === 'table') return `填表 · ${q.title || ''}`;
@@ -139,7 +140,7 @@ function collectOptionGroups(q, out) {
   else if (q.type === 'reading') (q.questions || []).forEach(sq => push(sq, 'options'));
   else if (q.type === 'cloze') (q.blanks || []).forEach(b => { if ((b.options || []).length >= 2) push(b, 'options'); });
   else if (q.type === 'listening') {
-    const list = q.subType === 'short_dialogue' ? (q.items || []) : (q.subType === 'long_dialogue' ? (q.questions || []) : []);
+    const list = (q.subType === 'short_dialogue' || q.subType === 'sentence') ? (q.items || []) : (q.subType === 'long_dialogue' ? (q.questions || []) : []);
     list.forEach(it => push(it, 'options'));
   }
   return out;
@@ -307,7 +308,8 @@ function normalizeQuestion(raw) {
     const prepTime = clamp(parseInt(raw.prepTime) || 30, 0, 180);
     const instructions = String(raw.instructions || '').trim();
 
-    if (sub === 'short_dialogue') {
+    if (sub === 'short_dialogue' || sub === 'sentence') {
+      const isSentence = sub === 'sentence';
       const items = Array.isArray(raw.items) ? raw.items : [];
       const normItems = items.map(it => {
         const opts = Array.isArray(it.options) ? it.options.map(String).filter(Boolean) : [];
@@ -315,7 +317,7 @@ function normalizeQuestion(raw) {
         if (!opts.length || !ans) return null;
         return {
           script: String(it.script || '').trim(),
-          question: String(it.question || '').trim(),
+          question: String(it.question || '').trim() || (isSentence ? '听句子，选出正确的应答语。' : ''),
           options: opts, answer: ans,
           point: String(it.point || '').trim(),
           explanation: String(it.explanation || '').trim()
@@ -323,9 +325,11 @@ function normalizeQuestion(raw) {
       }).filter(Boolean);
       if (!normItems.length) return null;
       return {
-        id: uid(), type:'listening', subType:'short_dialogue', difficulty: diff,
+        id: uid(), type:'listening', subType:sub, difficulty: diff,
         point: String(raw.point || '').trim(),
-        instructions: instructions || '听录音两遍，从ABC三个选项中选出能回答所给句子的正确答案。',
+        instructions: instructions || (isSentence
+          ? '听下面 5 个句子，从ABC三个选项中选出正确的应答语。'
+          : '听录音两遍，从ABC三个选项中选出能回答所给句子的正确答案。'),
         prepTime, items: normItems
       };
     }
@@ -845,7 +849,7 @@ function splitSentenceRanges(text) {
 }
 function listeningScriptsOf(q) {
   const list = [];
-  if (q.subType === 'short_dialogue') (q.items || []).forEach(it => { if (it.script) list.push({ s: it.script, note: it.explanation || (it.answer ? '答案 ' + it.answer : '') }); });
+  if (q.subType === 'short_dialogue' || q.subType === 'sentence') (q.items || []).forEach(it => { if (it.script) list.push({ s: it.script, note: it.explanation || (it.answer ? '答案 ' + it.answer : '') }); });
   else if (q.script) list.push({ s: q.script, note: '' });
   return list;
 }

@@ -216,6 +216,27 @@ td b{font-weight:600}
 .exam-sec-list li.exam-part-row b{font-family:var(--sans);font-size:13px;letter-spacing:.04em;font-weight:700}
 .exam-sec-list li.exam-part-row span{color:var(--ink-2);font-size:12.5px;font-weight:600}
 .exam-sec-list li.miss{opacity:.6}
+.bp-head{margin:4px 0 8px;font-family:var(--serif);font-size:14.5px;font-weight:600}
+.exam-bp-table{width:100%;border-collapse:collapse;font-size:13px}
+.exam-bp-table th,.exam-bp-table td{padding:7px 8px;border-bottom:1px solid var(--rule-2);text-align:left;vertical-align:middle}
+.exam-bp-table th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);font-weight:600;border-bottom:1px solid var(--rule)}
+.exam-bp-table th.bp-check,.exam-bp-table td.bp-check{width:44px;text-align:center}
+.exam-bp-table th.bp-big,.exam-bp-table td.bp-big{width:38px;text-align:center;font-family:var(--serif);color:var(--accent);font-weight:600}
+.exam-bp-table th.bp-num,.exam-bp-table td.bp-num{width:66px;text-align:center}
+.exam-bp-table th.bp-pts,.exam-bp-table td.bp-pts{width:52px;text-align:center;font-family:var(--serif)}
+.exam-bp-table th.bp-avail,.exam-bp-table td.bp-avail{width:130px;font-size:12px;color:var(--ink-3);text-align:right}
+.exam-bp-table td.bp-title{font-family:var(--serif);font-weight:600}
+.exam-bp-table td.bp-num input{width:52px;padding:4px 5px;text-align:center;font-size:13px}
+.exam-bp-table tr.bp-vol td{background:rgba(0,0,0,.05);font-size:12px;letter-spacing:.06em;font-weight:700;border-bottom:1px solid var(--rule)}
+.exam-bp-table tr.bp-vol td span{float:right;color:var(--ink-3);font-weight:600}
+.exam-bp-table tr.bp-row.off{opacity:.45}
+.exam-bp-table tr.bp-row.short td.bp-title{color:var(--accent)}
+.exam-bp-table .bp-short{color:var(--accent);font-weight:600}
+.exam-bp-table .bp-tag{display:inline-block;margin-left:6px;padding:1px 5px;font-size:10.5px;letter-spacing:.06em;border:1px solid var(--rule);border-radius:2px;color:var(--ink-3);font-weight:400}
+.exam-bp-table tr.bp-foot td{background:rgba(0,0,0,.03);font-size:12.5px;color:var(--ink-2);border-top:1px solid var(--rule)}
+.exam-bp-table tr.bp-foot td:nth-child(2),.exam-bp-table tr.bp-total td:nth-child(2){text-align:center;font-family:var(--serif);font-weight:700}
+.exam-bp-table tr.bp-total td{border-top:2px solid var(--ink);border-bottom:none;font-weight:700;font-size:14px}
+.exam-bp-table tr.bp-total td:nth-child(2){font-size:16px}
 .exam-opt{margin-bottom:14px}
 .exam-opt label{display:block;font-size:12.5px;color:var(--ink-2);margin-bottom:5px}
 .exam-opt select{width:100%}
