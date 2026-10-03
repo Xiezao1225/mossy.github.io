@@ -4,14 +4,10 @@
   "description": "MossyMC 玩法文档",
   "scripts": {
     "docs:dev": "vitepress dev docs",
-<<<<<<< HEAD
     "docs:build": "vitepress build docs && node scripts/build-static.mjs",
-    "docs:preview": "vitepress preview docs"
-=======
-    "docs:build": "vitepress build docs && node -e \"const f=require('node:fs');f.cpSync('resource','docs/.vitepress/dist/resource',{recursive:true});['psych.html','cert.html','tools.html','project.html'].forEach(p=>f.copyFileSync(p,'docs/.vitepress/dist/'+p))\"",
     "docs:preview": "vitepress preview docs",
-    "test:exam": "node smoke-exam.js"
->>>>>>> 67aeaebf21d63cdd36b6875d679d8acfbe43933a
+    "test:exam": "node smoke-exam.js",
+    "test:psych": "node smoke-psych.mjs"
   },
   "devDependencies": {
     "jsdom": "^30.1.1",

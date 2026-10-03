@@ -1,7 +1,10 @@
-/* 一次性冒烟测试：用最小 DOM/定时器仿真跑通 psych.html 的整条彩蛋流程 */
+/* 彩蛋流程冒烟测试：用最小 DOM/定时器仿真跑通 psych.html 的整条彩蛋流程 */
 import fs from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const HTML = fs.readFileSync('D:/Kevin/mossy.github.io/psych.html', 'utf8');
+const PSYCH_HTML = join(dirname(fileURLToPath(import.meta.url)), 'psych.html');
+const HTML = fs.readFileSync(PSYCH_HTML, 'utf8');
 const CODE = HTML.match(/<script>([\s\S]*?)<\/script>/)[1];
 
 /* ---------------- 虚拟时钟 ---------------- */

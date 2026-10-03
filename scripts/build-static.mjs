@@ -7,6 +7,7 @@
  *   /site/resource/       静态站相对引用的资源副本
  *   /resource/            共享资源，供 /psych.html、/cert.html 等根路径页面使用
  *   /psych.html /cert.html /tools.html
+ *   /project.html /project.css /js/   英语学习页（拆分模块版，根目录为唯一来源）
  *
  * 为什么资源要放两份：
  *   静态站的 index.html 用 "resource/xxx" 相对路径，部署在 /site/ 下时
@@ -17,7 +18,7 @@
  *   node scripts/build-static.mjs [产物目录]
  * 不传参数时使用 docs/.vitepress/dist，也可用环境变量 VITEPRESS_DIST 指定。
  */
-import { cpSync, mkdirSync, copyFileSync, existsSync, statSync } from 'node:fs'
+import { cpSync, mkdirSync, copyFileSync, existsSync, statSync, rmSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -63,7 +64,16 @@ for (const file of ['psych.html', 'cert.html', 'tools.html']) {
   copy(file, join(dist, file))
 }
 
-// 5) 人格解析页部署 docs/public/test.html（其中资源引用写成 ../../resource/，
+// 5) 英语学习页（project.html）已拆分为 html + project.css + js/ 模块，
+//    根目录是唯一来源；docs/public 里的旧整页副本会被这里覆盖。
+for (const file of ['project.html', 'project.css']) {
+  copy(file, join(dist, file))
+}
+rmSync(join(dist, 'js'), { recursive: true, force: true })
+cpSync(join(root, 'js'), join(dist, 'js'), { recursive: true })
+console.log('[build-static] js/ -> js/')
+
+// 6) 人格解析页部署 docs/public/test.html（其中资源引用写成 ../../resource/，
 //    浏览器会把根之上的 .. 钳制掉，因此 /test.html 与 /test/ 两种访问方式都能命中）。
 //    根目录那份 test.html 与它逐字节等价，仅少了 ../../ 前缀，作为源文件保留；
 //    这里显式复制，既补齐 tools.html 的链接，也让它不再依赖 VitePress 的 public 目录约定。
