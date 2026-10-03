@@ -646,66 +646,40 @@ function resetPoolUI(prefix) {
   else if (prefix === 'd') { dict.current = null; dNext(); }
 }
 
-PICKER_PREFIXES.forEach(prefix => {
-  const box = $(prefix + '-lib-picker');
-  if (!box) return;
-  box.addEventListener('change', e => {
-    const label = e.target.closest('[data-lib-pick]');
-    if (!label) return;
-    const id = label.dataset.id;
-    const selSet = pickerSelSet(prefix);
-    if (e.target.checked) selSet.add(id);
-    else selSet.delete(id);
-    label.classList.toggle('on', e.target.checked);
-    updatePoolInfo(prefix);
-    resetPoolUI(prefix);
-  });
-});
+/* 选择器事件：文档级委托，一处绑定覆盖 4 个选择器（含模考组卷页动态渲染的面板） */
+function pickerPrefixOf(id, suffix) {
+  return PICKER_PREFIXES.find(p => id === p + suffix) || null;
+}
 
-PICKER_PREFIXES.forEach(prefix => {
-  const allBtn = $(prefix + '-sel-all');
-  const noneBtn = $(prefix + '-sel-none');
-  const keyBox = $(prefix + '-key-only');
-  if (allBtn) allBtn.addEventListener('click', () => {
+document.addEventListener('change', e => {
+  const pick = e.target.closest('[data-lib-pick]');
+  if (pick) {
+    const prefix = pick.dataset.libPick;
     const selSet = pickerSelSet(prefix);
-    selSet.clear();
-    libraries.forEach(l => selSet.add(l.id));
-    renderLibPickers();
-    resetPoolUI(prefix);
-  });
-  if (noneBtn) noneBtn.addEventListener('click', () => {
-    const selSet = pickerSelSet(prefix);
-    selSet.clear();
-    renderLibPickers();
-    resetPoolUI(prefix);
-  });
-  if (keyBox) keyBox.addEventListener('change', () => {
-    updatePoolInfo(prefix);
-    resetPoolUI(prefix);
-  });
-});
-
-/* 模考「AI 全新出卷」页的词库选择器随组卷面板动态渲染，改用事件委托绑定 */
-$('bank-exam').addEventListener('change', e => {
-  const label = e.target.closest('[data-lib-pick="exam"]');
-  if (label) {
-    const id = label.dataset.id;
-    if (e.target.checked) aiSel.add(id);
-    else aiSel.delete(id);
-    renderLibPickers();
+    if (e.target.checked) selSet.add(pick.dataset.id);
+    else selSet.delete(pick.dataset.id);
+    // ai 与 exam 共享同一选择集：任一侧改动后整体重绘，保证两个面板显示同步
+    if (prefix === 'ai' || prefix === 'exam') renderLibPickers();
+    else {
+      pick.classList.toggle('on', e.target.checked);
+      updatePoolInfo(prefix);
+      resetPoolUI(prefix);
+    }
     return;
   }
-  if (e.target.id === 'exam-key-only' || e.target.id === 'exam-lib-only') updatePoolInfo('exam');
+  const keyPrefix = pickerPrefixOf(e.target.id, '-key-only');
+  if (keyPrefix) { updatePoolInfo(keyPrefix); resetPoolUI(keyPrefix); }
 });
-$('bank-exam').addEventListener('click', e => {
-  if (e.target.closest('#exam-sel-all')) {
-    aiSel.clear();
-    libraries.forEach(l => aiSel.add(l.id));
-    renderLibPickers();
-  } else if (e.target.closest('#exam-sel-none')) {
-    aiSel.clear();
-    renderLibPickers();
-  }
+
+document.addEventListener('click', e => {
+  const all = PICKER_PREFIXES.find(p => e.target.closest('#' + p + '-sel-all'));
+  const prefix = all || PICKER_PREFIXES.find(p => e.target.closest('#' + p + '-sel-none'));
+  if (!prefix) return;
+  const selSet = pickerSelSet(prefix);
+  selSet.clear();
+  if (all) libraries.forEach(l => selSet.add(l.id));
+  renderLibPickers();
+  resetPoolUI(prefix);
 });
 
 $('lib-grade').addEventListener('input', e => {
