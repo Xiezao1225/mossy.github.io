@@ -1,7 +1,14 @@
-/* 一次性冒烟测试：用最小 DOM/定时器仿真跑通 psych.html 的整条彩蛋流程 */
+/* 一次性冒烟测试：用最小 DOM/定时器仿真跑通 psych.html 的整条彩蛋流程
+   用法：node ._eggtest.mjs [被测 html 的路径]
+   不传参数时，默认读取与本脚本同目录的 psych.html。 */
 import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join, resolve } from 'node:path';
 
-const HTML = fs.readFileSync('D:/Kevin/mossy.github.io/psych.html', 'utf8');
+const HERE = dirname(fileURLToPath(import.meta.url));
+const TARGET = resolve(process.argv[2] || join(HERE, 'psych.html'));
+
+const HTML = fs.readFileSync(TARGET, 'utf8');
 const CODE = HTML.match(/<script>([\s\S]*?)<\/script>/)[1];
 
 /* ---------------- 虚拟时钟 ---------------- */
