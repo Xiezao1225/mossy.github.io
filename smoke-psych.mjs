@@ -1,3 +1,4 @@
+<<<<<<< HEAD:._eggtest.mjs
 /* 一次性冒烟测试：用最小 DOM/定时器仿真跑通 psych.html 的整条彩蛋流程
    用法：node ._eggtest.mjs [被测 html 的路径]
    不传参数时，默认读取与本脚本同目录的 psych.html。 */
@@ -9,6 +10,15 @@ const HERE = dirname(fileURLToPath(import.meta.url));
 const TARGET = resolve(process.argv[2] || join(HERE, 'psych.html'));
 
 const HTML = fs.readFileSync(TARGET, 'utf8');
+=======
+/* 彩蛋流程冒烟测试：用最小 DOM/定时器仿真跑通 psych.html 的整条彩蛋流程 */
+import fs from 'node:fs';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const PSYCH_HTML = join(dirname(fileURLToPath(import.meta.url)), 'psych.html');
+const HTML = fs.readFileSync(PSYCH_HTML, 'utf8');
+>>>>>>> 0f54b23dba69e64422eb3940492c5586a675a01d:smoke-psych.mjs
 const CODE = HTML.match(/<script>([\s\S]*?)<\/script>/)[1];
 
 /* ---------------- 虚拟时钟 ---------------- */
